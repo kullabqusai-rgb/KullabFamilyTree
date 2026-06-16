@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>شجرة العائلة</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap');
+
+  :root {
+    --bg:#0f0e0c; --surface:#1a1814; --surface2:#231f1a;
+    --gold:#c9962a; --gold-light:#e8b84b; --gold-dim:#7a5a18;
+    --text:#e8dcc8; --text-dim:#8a7a62;
+    --border:#2e2820; --red:#c0392b; --green:#27ae60;
+    --node-w:160px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:'Tajawal',sans-serif;min-height:100vh;overflow-x:hidden;}
+
+  /* ── HEADER ── */
+  header{background:linear-gradient(135deg,#1a1510,#0f0e0c);border-bottom:1px solid var(--gold-dim);
+    padding:14px 24px;display:flex;align-items:center;justify-content:space-between;
+    position:sticky;top:0;z-index:100;box-shadow:0 4px 24px rgba(0,0,0,.6);}
+  .logo{display:flex;align-items:center;gap:10px;}
+  .logo-icon{width:38px;height:38px;background:linear-gradient(135deg,var(--gold),var(--gold-dim));
+    border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;
+    box-shadow:0 0 14px rgba(201,150,42,.35);}
+  .logo-text{font-size:20px;font-weight:700;background:linear-gradient(135deg,var(--gold-light),var(--gold));
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+  .header-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+
+  /* ── BUTTONS ── */
+  .btn{padding:7px 16px;border-radius:8px;border:none;cursor:pointer;
+    font-family:'Tajawal',sans-serif;font-size:13px;font-weight:600;transition:all .2s;}
+  .btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold-dim));color:#0f0e0c;}
+  .btn-gold:hover{filter:brightness(1.15);transform:translateY(-1px);}
+  .btn-outline{background:transparent;border:1px solid var(--gold-dim);color:var(--gold);}
+  .btn-outline:hover{border-color:var(--gold);background:rgba(201,150,42,.1);}
+  .btn-danger{background:rgba(192,57,43,.2);border:1px solid #c0392b;color:#e74c3c;}
+  .btn-danger:hover{background:rgba(192,57,43,.35);}
+  .btn-blue{background:rgba(41,128,185,.2);border:1px solid #2980b9;color:#5dade2;}
+  .btn-blue:hover{background:rgba(41,128,185,.35);}
+
+  .admin-badge{background:linear-gradient(135deg,var(--gold),var(--gold-dim));color:#0f0e0c;
+    padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;}
+  .temp-badge{background:linear-gradient(135deg,#2980b9,#1a5276);color:#fff;
+    padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;}
+
+  /* ── TOOLBAR ── */
+  .toolbar{display:flex;gap:8px;align-items:center;padding:8px 24px;
+    background:var(--surface);border-bottom:1px solid var(--border);flex-wrap:wrap;}
+
+  /* ── CANVAS ── */
+  #canvas-wrap{width:100%;min-height:calc(100vh - 110px);overflow:auto;position:relative;
+    background:radial-gradient(ellipse 80% 50% at 50% 0%,rgba(201,150,42,.04) 0%,transparent 60%),var(--bg);}
+  #tree-canvas{position:relative;padding:60px 40px 120px;}
+  svg#lines{position:absolute;top:0;left:0;pointer-events:none;overflow:visible;}
+
+  /* ── NODE ── */
+  .node{position:absolute;width:var(--node-w);background:var(--surface);
+    border:1.5px solid var(--border);border-radius:14px;padding:14px 10px 10px;
+    user-select:none;text-align:center;transition:box-shadow .2s,border-color .2s;
+    cursor:default;}
+  .node:hover{border-color:var(--gold-dim);box-shadow:0 4px 20px rgba(201,150,42,.2);}
+  .node.root-node{border-color:var(--gold);box-shadow:0 0 18px rgba(201,150,42,.25);}
+  .node.root-node .node-avatar{background:linear-gradient(135deg,var(--gold),var(--gold-dim));}
+  .node-avatar{width:46px;height:46px;border-radius:50%;background:var(--surface2);
+    border:2px solid var(--border);margin:0 auto 7px;
+    display:flex;align-items:center;justify-content:center;font-size:20px;}
+  .gender-m .node-avatar{border-color:#2980b9;}
+  .gender-f .node-avatar{border-color:#8e44ad;}
+  .node-name{font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px;word-break:break-word;}
+  .node-info{font-size:10px;color:var(--text-dim);margin-bottom:8px;min-height:13px;}
+  .node-actions{display:flex;gap:4px;justify-content:center;flex-wrap:wrap;}
+  .node-btn{padding:3px 8px;border-radius:6px;border:none;cursor:pointer;
+    font-family:'Tajawal',sans-serif;font-size:11px;font-weight:600;transition:all .15s;}
+  .node-btn-add{background:rgba(39,174,96,.2);color:#2ecc71;border:1px solid rgba(39,174,96,.4);}
+  .node-btn-add:hover{background:rgba(39,174,96,.35);}
+  .node-btn-edit{background:rgba(201,150,42,.15);color:var(--gold);border:1px solid var(--gold-dim);}
+  .node-btn-edit:hover{background:rgba(201,150,42,.3);}
+  .node-btn-del{background:rgba(192,57,43,.15);color:#e74c3c;border:1px solid rgba(192,57,43,.4);}
+  .node-btn-del:hover{background:rgba(192,57,43,.3);}
+
+  /* ── MODAL ── */
+  .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;
+    align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+  .modal-bg.open{display:flex;}
+  .modal{background:var(--surface);border:1px solid var(--gold-dim);border-radius:18px;
+    padding:26px;width:340px;max-width:95vw;box-shadow:0 20px 60px rgba(0,0,0,.8);
+    animation:popIn .2s ease;max-height:90vh;overflow-y:auto;}
+  .modal-wide{width:500px;}
+  @keyframes popIn{from{transform:scale(.92);opacity:0}to{transform:scale(1);opacity:1}}
+  .modal h3{font-size:17px;font-weight:700;color:var(--gold-light);margin-bottom:18px;text-align:center;}
+  .form-group{margin-bottom:13px;}
+  .form-group label{display:block;font-size:12px;color:var(--text-dim);margin-bottom:5px;font-weight:600;}
+  .form-group input,.form-group select,.form-group textarea{width:100%;background:var(--surface2);
+    border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);
+    font-family:'Tajawal',sans-serif;font-size:13px;outline:none;transition:border-color .2s;}
+  .form-group input:focus,.form-group select:focus{border-color:var(--gold-dim);}
+  .form-group select option{background:var(--surface2);}
+  .modal-actions{display:flex;gap:8px;margin-top:18px;justify-content:flex-end;}
+
+  /* ── TOAST ── */
+  #toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);
+    background:var(--surface);border:1px solid var(--gold-dim);color:var(--text);
+    padding:9px 20px;border-radius:10px;font-size:13px;opacity:0;transition:opacity .3s;
+    z-index:300;pointer-events:none;white-space:nowrap;}
+  #toast.show{opacity:1;}
+
+  /* ── EMPTY STATE ── */
+  .empty-state{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+    text-align:center;color:var(--text-dim);}
+  .empty-state .big-icon{font-size:60px;margin-bottom:14px;opacity:.3;}
+  .empty-state p{font-size:15px;margin-bottom:18px;}
+
+  /* ── TEMP PW TABLE ── */
+  .tp-table{width:100%;border-collapse:collapse;font-size:12px;}
+  .tp-table th{background:var(--surface2);color:var(--text-dim);padding:6px 8px;
+    text-align:right;font-weight:600;border-bottom:1px solid var(--border);}
+  .tp-table td{padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle;}
+  .tp-table tr:last-child td{border-bottom:none;}
+  .pw-code{font-family:monospace;background:var(--surface2);padding:2px 6px;border-radius:4px;
+    color:var(--gold-light);letter-spacing:1px;}
+  .badge-active{background:rgba(39,174,96,.2);color:#2ecc71;border:1px solid rgba(39,174,96,.4);
+    padding:1px 7px;border-radius:10px;font-size:10px;}
+  .badge-expired{background:rgba(192,57,43,.15);color:#e74c3c;border:1px solid rgba(192,57,43,.3);
+    padding:1px 7px;border-radius:10px;font-size:10px;}
+
+  /* ── EXPORT IMAGE PROGRESS ── */
+  #exportOverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:400;
+    align-items:center;justify-content:center;flex-direction:column;gap:16px;}
+  #exportOverlay.show{display:flex;}
+  #exportOverlay p{color:var(--gold-light);font-size:16px;font-weight:600;}
+
+  /* ── SEARCH BAR ── */
+  #searchWrap{display:flex;align-items:center;gap:6px;position:relative;}
+  #searchInput{background:var(--surface2);border:1px solid var(--gold-dim);border-radius:9px;
+    padding:7px 14px 7px 36px;color:var(--text);font-family:'Tajawal',sans-serif;font-size:13px;
+    outline:none;width:220px;transition:border-color .2s,width .2s;}
+  #searchInput:focus{border-color:var(--gold);width:260px;}
+  #searchInput::placeholder{color:var(--text-dim);}
+  .search-icon{position:absolute;left:10px;color:var(--text-dim);font-size:15px;pointer-events:none;}
+  #searchResults{position:absolute;top:38px;right:0;width:280px;background:var(--surface);
+    border:1px solid var(--gold-dim);border-radius:10px;z-index:500;
+    box-shadow:0 8px 28px rgba(0,0,0,.7);display:none;max-height:220px;overflow-y:auto;}
+  #searchResults.open{display:block;}
+  .sr-item{padding:9px 14px;cursor:pointer;font-size:13px;color:var(--text);
+    border-bottom:1px solid var(--border);transition:background .15s;}
+  .sr-item:last-child{border-bottom:none;}
+  .sr-item:hover{background:rgba(201,150,42,.1);}
+  .sr-item .sr-path{font-size:10px;color:var(--text-dim);margin-top:2px;direction:rtl;text-align:right;unicode-bidi:embed;}
+  /* node highlight when found */
+  .node.search-highlight{border-color:var(--gold)!important;
+    box-shadow:0 0 0 3px rgba(201,150,42,.45),0 0 24px rgba(201,150,42,.35)!important;
+    animation:pulseGold 1.2s ease 3;}
+  @keyframes pulseGold{0%,100%{box-shadow:0 0 0 3px rgba(201,150,42,.45),0 0 24px rgba(201,150,42,.35)}
+    50%{box-shadow:0 0 0 6px rgba(201,150,42,.25),0 0 40px rgba(201,150,42,.55)}}
+  /* focus frame overlay on canvas */
+  #focusFrame{display:none;position:absolute;pointer-events:none;border:2px solid var(--gold);
+    border-radius:16px;box-shadow:0 0 0 4px rgba(201,150,42,.2);transition:all .3s;z-index:10;}
+
+  @media(max-width:600px){
+    header{padding:10px 14px;}
+    .logo-text{font-size:17px;}
+    .toolbar{padding:7px 14px;}
+    #searchInput{width:160px;}
+    #searchInput:focus{width:190px;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">🌳</div>
+    <span class="logo-text">شجرة العائلة</span>
+  </div>
+  <div class="header-actions" id="headerActions">
+    <button class="btn btn-outline" onclick="openAdminLogin()">🔑 دخول المدير</button>
+  </div>
+</header>
+
+<div class="toolbar" id="toolbar">
+  <button class="btn btn-blue" onclick="exportImage()">📷 تصدير صورة</button>
+  <!-- admin-only buttons injected here -->
+</div>
+<!-- SEARCH BAR (fixed below header, always visible) -->
+<div style="display:flex;align-items:center;justify-content:center;padding:8px 24px;
+  background:var(--surface);border-bottom:1px solid var(--border);gap:10px;">
+  <div id="searchWrap">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="searchInput" placeholder="ابحث بالاسم..."
+      autocomplete="off" oninput="onSearchInput()" onkeydown="onSearchKey(event)">
+    <div id="searchResults"></div>
+  </div>
+  <button class="btn btn-outline" onclick="clearSearch()" style="font-size:12px;padding:5px 10px">✕ مسح</button>
+</div>
+
+<div id="canvas-wrap">
+  <div id="tree-canvas">
+    <svg id="lines" xmlns="http://www.w3.org/2000/svg"></svg>
+    <div id="focusFrame"></div>
+    <div class="empty-state" id="emptyState">
+      <div class="big-icon">🌳</div>
+      <p>لا توجد بيانات بعد</p>
+      <p style="font-size:12px;color:var(--text-dim)" id="emptyHint">سجّل دخولك كمدير لبدء الإضافة</p>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<!-- export overlay -->
+<div id="exportOverlay"><p>⏳ جاري تصدير الصورة...</p></div>
+
+<!-- ══ ADD/EDIT MODAL ══ -->
+<div class="modal-bg" id="personModal">
+  <div class="modal">
+    <h3 id="personModalTitle">إضافة فرد</h3>
+    <div class="form-group"><label>الاسم الكامل *</label>
+      <input type="text" id="pName" placeholder="أدخل الاسم"></div>
+    <div class="form-group"><label>الجنس</label>
+      <select id="pGender"><option value="m">ذكر 👨</option><option value="f">أنثى 👩</option></select></div>
+    <div class="form-group"><label>سنة الميلاد</label>
+      <input type="number" id="pBirth" placeholder="مثال: 1970" min="1800" max="2099"></div>
+    <div class="form-group"><label>ملاحظة</label>
+      <input type="text" id="pNote" placeholder="أي معلومة إضافية"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('personModal')">إلغاء</button>
+      <button class="btn btn-gold" onclick="savePerson()">حفظ</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ADMIN LOGIN ══ -->
+<div class="modal-bg" id="adminModal">
+  <div class="modal">
+    <h3>🔑 دخول المدير</h3>
+    <div class="form-group"><label>كلمة المرور</label>
+      <input type="password" id="adminPass" placeholder="••••••••"
+        onkeydown="if(event.key==='Enter')doAdminLogin()"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('adminModal')">إلغاء</button>
+      <button class="btn btn-gold" onclick="doAdminLogin()">دخول</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CHANGE PW ══ -->
+<div class="modal-bg" id="changePwModal">
+  <div class="modal">
+    <h3>🔒 تغيير كلمة المرور</h3>
+    <div class="form-group"><label>الحالية</label><input type="password" id="oldPw"></div>
+    <div class="form-group"><label>الجديدة</label><input type="password" id="newPw"></div>
+    <div class="form-group"><label>تأكيد الجديدة</label><input type="password" id="newPw2"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('changePwModal')">إلغاء</button>
+      <button class="btn btn-gold" onclick="doChangePw()">تغيير</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ DELETE CONFIRM ══ -->
+<div class="modal-bg" id="deleteModal">
+  <div class="modal">
+    <h3>⚠️ تأكيد الحذف</h3>
+    <p style="color:var(--text-dim);text-align:center;margin-bottom:14px;font-size:13px">
+      هل تريد حذف هذا الشخص وكل أبنائه؟<br>
+      <strong id="deleteTargetName" style="color:var(--gold)"></strong>
+    </p>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('deleteModal')">إلغاء</button>
+      <button class="btn btn-danger" onclick="confirmDelete()">حذف</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ JSONBIN SETUP ══ -->
+<div class="modal-bg" id="binSetupModal">
+  <div class="modal">
+    <h3>☁️ إعداد التخزين السحابي</h3>
+    <p style="font-size:12px;color:var(--text-dim);margin-bottom:14px;line-height:1.7">
+      استخدم <strong style="color:var(--gold)">JSONBin.io</strong> المجاني لحفظ البيانات على الإنترنت بحيث يراها الجميع.
+    </p>
+    <div class="form-group"><label>🔑 Master Key</label>
+      <input type="password" id="binMasterKey" placeholder="$2a$10$..."></div>
+    <div class="form-group"><label>📦 Bin ID — البيانات الرئيسية</label>
+      <input type="text" id="binDataId" placeholder="64abc123..."></div>
+    <div class="form-group"><label>📦 Bin ID — الإعدادات والكلمات المؤقتة</label>
+      <input type="text" id="binSettingsId" placeholder="64def456..."></div>
+    <details style="margin-bottom:12px">
+      <summary style="cursor:pointer;color:var(--gold);font-size:12px;font-weight:600">📖 طريقة الإعداد</summary>
+      <div style="font-size:11px;color:var(--text-dim);line-height:1.9;margin-top:8px;padding:10px;background:var(--surface2);border-radius:8px">
+        1. سجّل مجاناً على <strong style="color:var(--gold-light)">jsonbin.io</strong><br>
+        2. API Keys ← انسخ <strong>Master Key</strong><br>
+        3. أنشئ Bin جديد → <code style="background:#111;padding:1px 4px;border-radius:3px">{"nodes":{},"nextId":1}</code> → انسخ ID → البيانات الرئيسية<br>
+        4. أنشئ Bin ثاني → <code style="background:#111;padding:1px 4px;border-radius:3px">{"tempPws":[]}</code> → انسخ ID → الإعدادات<br>
+        5. في إعدادات كل Bin → اجعل <strong>Private: OFF</strong>
+      </div>
+    </details>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('binSetupModal')">إلغاء</button>
+      <button class="btn btn-gold" onclick="saveBinConfig()">حفظ وتحميل</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TEMP PASSWORDS ══ -->
+<div class="modal-bg" id="tempPwModal">
+  <div class="modal modal-wide">
+    <h3>🗝️ الصلاحيات المؤقتة</h3>
+    <div style="display:flex;gap:7px;margin-bottom:12px;flex-wrap:wrap">
+      <input type="text" id="tpLabel" placeholder="الاسم / الوصف"
+        style="flex:1;min-width:110px;background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:7px 10px;color:var(--text);font-family:'Tajawal',sans-serif;font-size:12px;outline:none">
+      <input type="text" id="tpPass" placeholder="كلمة المرور"
+        style="flex:1;min-width:110px;background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:7px 10px;color:var(--text);font-family:'Tajawal',sans-serif;font-size:12px;outline:none">
+      <select id="tpExpiry"
+        style="background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:7px 10px;color:var(--text);font-family:'Tajawal',sans-serif;font-size:12px;outline:none">
+        <option value="0">بدون انتهاء</option>
+        <option value="1">يوم</option>
+        <option value="3">3 أيام</option>
+        <option value="7">أسبوع</option>
+        <option value="30">شهر</option>
+      </select>
+      <button class="btn btn-gold" onclick="addTempPass()">+ إضافة</button>
+    </div>
+    <div style="max-height:260px;overflow-y:auto;border-radius:9px;border:1px solid var(--border)">
+      <table class="tp-table">
+        <thead><tr><th>الاسم</th><th>كلمة المرور</th><th>الانتهاء</th><th>الحالة</th><th></th></tr></thead>
+        <tbody id="tpTableBody">
+          <tr><td colspan="5" style="text-align:center;color:var(--text-dim);padding:16px">لا توجد كلمات مرور مؤقتة</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('tempPwModal')">إغلاق</button></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+// ══════════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════════
+let nodes        = {};
+let isAdmin      = false;
+let isTempUser   = false;
+let adminPass    = 'Anan851103';
+let tempPasswords= [];
+let editingId    = null;
+let editingParentId = null;
+let deleteTargetId  = null;
+let nextId       = 1;
+
+const NODE_W = 160, NODE_H = 140;
+const H_GAP  = 50,  V_GAP  = 90;
+
+// ══════════════════════════════════════════════════
+//  JSONBIN CONFIG  (saved in localStorage — only config, not data)
+// ══════════════════════════════════════════════════
+const CFG_KEY = 'ftree_cfg';
+const BIN_BASE = 'https://api.jsonbin.io/v3/b';
+let binMasterKey='$2a$10$Ljsisj2JIOoeQhWi7Qr9B.64VB0Jfc/y2uM1MAgNwWEP5qWrzSflu';
+let binDataId='6a2ddb99f5f4af5e29edacdb';
+let binSettingsId='6a2ddbd1da38895dfebc27bc';
+
+function loadBinConfig(){
+  // المفاتيح مدمجة في الكود مباشرة
+}
+function saveBinConfig(){
+  const mk =document.getElementById('binMasterKey').value.trim();
+  const did=document.getElementById('binDataId').value.trim();
+  const sid=document.getElementById('binSettingsId').value.trim();
+  if(!mk||!did||!sid){toast('⚠️ الرجاء تعبئة جميع الحقول');return;}
+  localStorage.setItem(CFG_KEY,JSON.stringify({mk,did,sid}));
+  binMasterKey=mk; binDataId=did; binSettingsId=sid;
+  closeModal('binSetupModal');
+  toast('✅ تم الحفظ — جاري التحميل...');
+  loadFromCloud();
+}
+function isCloudOK(){ return binMasterKey&&binDataId&&binSettingsId; }
+
+// ══════════════════════════════════════════════════
+//  CLOUD  READ / WRITE
+// ══════════════════════════════════════════════════
+async function loadFromCloud(){
+  bar(true);
+  try{
+    const r1=await fetch(`${BIN_BASE}/${binDataId}/latest`,{headers:{'X-Master-Key':binMasterKey}});
+    if(r1.ok){const j=await r1.json();const d=j.record||{};nodes=d.nodes||{};nextId=d.nextId||1;}
+    const r2=await fetch(`${BIN_BASE}/${binSettingsId}/latest`,{headers:{'X-Master-Key':binMasterKey}});
+    if(r2.ok){const j=await r2.json();tempPasswords=(j.record||{}).tempPws||[];}
+  }catch(e){toast('⚠️ تعذّر الاتصال بالسحابة');}
+  bar(false); render();
+}
+
+let _saveTimer=null;
+async function save(){
+  if(!isCloudOK()) return;
+  clearTimeout(_saveTimer);
+  _saveTimer=setTimeout(async()=>{
+    bar(true);
+    try{
+      await fetch(`${BIN_BASE}/${binDataId}`,{
+        method:'PUT',
+        headers:{'Content-Type':'application/json','X-Master-Key':binMasterKey},
+        body:JSON.stringify({nodes,nextId})
+      });
+    }catch(e){toast('⚠️ فشل الحفظ');}
+    bar(false);
+  },800);
+}
+
+async function saveTempPasswords(){
+  if(!isCloudOK()) return;
+  try{
+    await fetch(`${BIN_BASE}/${binSettingsId}`,{
+      method:'PUT',
+      headers:{'Content-Type':'application/json','X-Master-Key':binMasterKey},
+      body:JSON.stringify({tempPws:tempPasswords})
+    });
+  }catch(e){toast('⚠️ فشل حفظ الإعدادات');}
+}
+
+function bar(on){
+  let el=document.getElementById('_bar');
+  if(!el){
+    el=document.createElement('div'); el.id='_bar';
+    el.style.cssText='position:fixed;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--gold),var(--gold-light),var(--gold));background-size:200%;animation:_sh 1.2s linear infinite;z-index:9999;transition:opacity .3s;';
+    document.head.insertAdjacentHTML('beforeend','<style>@keyframes _sh{0%{background-position:200% 0}100%{background-position:-200% 0}}</style>');
+    document.body.prepend(el);
+  }
+  el.style.opacity=on?'1':'0';
+}
+
+// ══════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════
+window.onload=()=>{
+  loadBinConfig();
+  if(isCloudOK()) loadFromCloud(); else render();
+};
+
+// ══════════════════════════════════════════════════
+//  AUTO LAYOUT  — always recalculate from scratch
+// ══════════════════════════════════════════════════
+function autoLayout(){
+  const children={};
+  const roots=[];
+  Object.values(nodes).forEach(n=>{
+    if(!n.parentId) roots.push(n.id);
+    else{ (children[n.parentId]=children[n.parentId]||[]).push(n.id); }
+  });
+
+  // Assign column widths (leaf=1 col, branch=sum of children)
+  function spanOf(id){
+    const kids=children[id]||[];
+    if(!kids.length) return 1;
+    return kids.reduce((s,k)=>s+spanOf(k),0);
+  }
+
+  function place(id,depth,colStart){
+    const kids=children[id]||[];
+    if(!kids.length){
+      nodes[id].x = colStart*(NODE_W+H_GAP)+60;
+      nodes[id].y = depth  *(NODE_H+V_GAP)+60;
+      return;
+    }
+    let cur=colStart;
+    kids.forEach(k=>{ place(k,depth+1,cur); cur+=spanOf(k); });
+    const first=nodes[kids[0]].x;
+    const last =nodes[kids[kids.length-1]].x;
+    nodes[id].x=(first+last)/2;
+    nodes[id].y=depth*(NODE_H+V_GAP)+60;
+  }
+
+  let col=0;
+  roots.forEach(rid=>{ place(rid,0,col); col+=spanOf(rid); });
+}
+
+// ══════════════════════════════════════════════════
+//  RENDER
+// ══════════════════════════════════════════════════
+function render(){
+  const canvas=document.getElementById('tree-canvas');
+  canvas.querySelectorAll('.node').forEach(n=>n.remove());
+
+  const ids=Object.keys(nodes);
+  document.getElementById('emptyState').style.display=ids.length?'none':'block';
+  document.getElementById('emptyHint').style.display=
+    (ids.length===0&&!isAdmin&&!isTempUser)?'block':'none';
+
+  updateToolbar();
+
+  if(!ids.length) return;
+
+  autoLayout();
+
+  // Canvas size
+  let maxX=0,maxY=0;
+  ids.forEach(id=>{ maxX=Math.max(maxX,nodes[id].x+NODE_W+40); maxY=Math.max(maxY,nodes[id].y+NODE_H+40); });
+  canvas.style.width =maxX+'px';
+  canvas.style.height=Math.max(maxY,window.innerHeight-150)+'px';
+  document.getElementById('lines').setAttribute('width', maxX);
+  document.getElementById('lines').setAttribute('height',Math.max(maxY,window.innerHeight-150));
+
+  ids.forEach(id=>drawNode(id));
+  drawLines();
+}
+
+function updateToolbar(){
+  const tb=document.getElementById('toolbar');
+  const adminBtns=(isAdmin||isTempUser)?`
+    <button class="btn btn-gold" id="addRootBtn" onclick="openAddRoot()" style="${Object.keys(nodes).length?'display:none':''}">+ الجد الأول</button>
+  `:'';
+  tb.innerHTML=`
+    ${adminBtns}
+    <button class="btn btn-blue" onclick="exportImage()">📷 تصدير الكل</button>
+    <button class="btn btn-outline" onclick="openExportPartial()" title="يصدر الشخص المبحوث + أبوه + أبناؤه">🖼️ تصدير جزئي</button>
+  `;
+}
+
+function drawNode(id){
+  const n=nodes[id];
+  const canvas=document.getElementById('tree-canvas');
+  const div=document.createElement('div');
+  div.className='node gender-'+n.gender+(n.parentId?'':' root-node');
+  div.id='node-'+id;
+  div.style.left=n.x+'px';
+  div.style.top =n.y+'px';
+
+  const emoji=n.gender==='f'?'👩':'👨';
+  const canEdit=isAdmin||isTempUser;
+  const addBtn=canEdit?`<button class="node-btn node-btn-add" onclick="openAddChild('${id}')">+ ابن/بنت</button>`:'';
+  const editBtn=canEdit?`<button class="node-btn node-btn-edit" onclick="openEdit('${id}')">✏️</button>`:'';
+  const delBtn =canEdit?`<button class="node-btn node-btn-del"  onclick="openDelete('${id}')">🗑️</button>`:'';
+
+  div.innerHTML=`
+    <div class="node-avatar">${emoji}</div>
+    <div class="node-name">${n.name}</div>
+    <div class="node-info">${n.birth?'📅 '+n.birth:''}${n.note?(n.birth?' · ':'')+n.note:''}</div>
+    <div class="node-actions">${addBtn}${editBtn}${delBtn}</div>`;
+
+  canvas.appendChild(div);
+}
+
+function drawLines(){
+  const svg=document.getElementById('lines');
+  svg.innerHTML='';
+  Object.values(nodes).forEach(n=>{
+    if(!n.parentId) return;
+    const p=nodes[n.parentId]; if(!p) return;
+
+    const px=p.x+NODE_W/2, py=p.y+NODE_H;
+    const cx=n.x+NODE_W/2, cy=n.y;
+    const mid=(py+cy)/2;
+
+    // Curve
+    const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('d',`M${px},${py} C${px},${mid} ${cx},${mid} ${cx},${cy}`);
+    path.setAttribute('stroke','#c9962a');
+    path.setAttribute('stroke-width','2');
+    path.setAttribute('fill','none');
+    path.setAttribute('stroke-linecap','round');
+    path.setAttribute('opacity','0.55');
+    svg.appendChild(path);
+
+    // Arrow at child
+    const arr=document.createElementNS('http://www.w3.org/2000/svg','polygon');
+    arr.setAttribute('points',`${cx},${cy} ${cx-5},${cy-8} ${cx+5},${cy-8}`);
+    arr.setAttribute('fill','#c9962a');
+    arr.setAttribute('opacity','0.7');
+    svg.appendChild(arr);
+  });
+
+  // Sibling connector: horizontal line between children of same parent
+  const byParent={};
+  Object.values(nodes).forEach(n=>{ if(n.parentId)(byParent[n.parentId]=byParent[n.parentId]||[]).push(n); });
+  Object.values(byParent).forEach(siblings=>{
+    if(siblings.length<2) return;
+    const ys=siblings.map(s=>s.y);
+    const allSameRow=ys.every(y=>y===ys[0]);
+    if(!allSameRow) return;
+    const xs=siblings.map(s=>s.x+NODE_W/2).sort((a,b)=>a-b);
+    const y=ys[0];
+    const line=document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1',xs[0]); line.setAttribute('y1',y-20);
+    line.setAttribute('x2',xs[xs.length-1]); line.setAttribute('y2',y-20);
+    line.setAttribute('stroke','#c9962a'); line.setAttribute('stroke-width','1.5');
+    line.setAttribute('opacity','0.35');
+    svg.appendChild(line);
+  });
+}
+
+// ══════════════════════════════════════════════════
+//  MODAL HELPERS
+// ══════════════════════════════════════════════════
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-bg').forEach(bg=>{
+  bg.addEventListener('click',e=>{ if(e.target===bg) bg.classList.remove('open'); });
+});
+
+// ══════════════════════════════════════════════════
+//  ADD / EDIT / DELETE
+// ══════════════════════════════════════════════════
+function openAddRoot(){
+  if(!isAdmin&&!isTempUser) return;
+  editingId=null; editingParentId=null; clearPF();
+  document.getElementById('personModalTitle').textContent='إضافة الجد الأول';
+  openModal('personModal');
+}
+function openAddChild(parentId){
+  if(!isAdmin&&!isTempUser) return;
+  editingId=null; editingParentId=parentId; clearPF();
+  document.getElementById('personModalTitle').textContent='إضافة ابن/بنت لـ '+nodes[parentId].name;
+  openModal('personModal');
+}
+function openEdit(id){
+  if(!isAdmin&&!isTempUser) return;
+  editingId=id; editingParentId=null;
+  const n=nodes[id];
+  document.getElementById('pName').value  =n.name;
+  document.getElementById('pGender').value=n.gender;
+  document.getElementById('pBirth').value =n.birth||'';
+  document.getElementById('pNote').value  =n.note ||'';
+  document.getElementById('personModalTitle').textContent='تعديل: '+n.name;
+  openModal('personModal');
+}
+function clearPF(){
+  ['pName','pBirth','pNote'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('pGender').value='m';
+}
+function savePerson(){
+  const name=document.getElementById('pName').value.trim();
+  if(!name){toast('⚠️ الاسم مطلوب');return;}
+  if(editingId){
+    nodes[editingId].name  =name;
+    nodes[editingId].gender=document.getElementById('pGender').value;
+    nodes[editingId].birth =document.getElementById('pBirth').value;
+    nodes[editingId].note  =document.getElementById('pNote').value.trim();
+  } else {
+    const id='n'+(nextId++);
+    nodes[id]={id,name,gender:document.getElementById('pGender').value,
+      birth:document.getElementById('pBirth').value,
+      note:document.getElementById('pNote').value.trim(),
+      parentId:editingParentId,x:0,y:0};
+  }
+  save(); closeModal('personModal'); render(); toast('✅ تم الحفظ');
+}
+function openDelete(id){
+  if(!isAdmin&&!isTempUser) return;
+  deleteTargetId=id;
+  document.getElementById('deleteTargetName').textContent=nodes[id].name;
+  openModal('deleteModal');
+}
+function confirmDelete(){
+  if(!deleteTargetId) return;
+  deleteSubtree(deleteTargetId);
+  save(); closeModal('deleteModal'); render(); toast('🗑️ تم الحذف');
+}
+function deleteSubtree(id){
+  Object.keys(nodes).forEach(k=>{ if(nodes[k].parentId===id) deleteSubtree(k); });
+  delete nodes[id];
+}
+
+// ══════════════════════════════════════════════════
+//  ADMIN AUTH
+// ══════════════════════════════════════════════════
+function openAdminLogin(){ openModal('adminModal'); }
+
+function doAdminLogin(){
+  const pw=document.getElementById('adminPass').value.trim();
+  document.getElementById('adminPass').value='';
+
+  if(pw===adminPass){
+    isAdmin=true; isTempUser=false;
+    closeModal('adminModal'); updateAdminUI(); toast('✅ مرحباً بك أيها المدير');
+    return;
+  }
+  const now=Date.now();
+  const m=tempPasswords.find(tp=>tp.pass===pw&&(tp.expiry===0||tp.expiry>now));
+  if(m){
+    isAdmin=false; isTempUser=true;
+    closeModal('adminModal'); updateAdminUI(m.label);
+    toast('✅ مرحباً '+m.label);
+    return;
+  }
+  toast('❌ كلمة المرور خاطئة أو منتهية');
+}
+
+function updateAdminUI(tempLabel){
+  const ha=document.getElementById('headerActions');
+  if(isAdmin){
+    ha.innerHTML=`
+      <span class="admin-badge">👑 مدير</span>
+      <button class="btn btn-outline" onclick="openModal('tempPwModal');renderTempTable()">🗝️ مؤقتة</button>
+      <button class="btn btn-outline" onclick="openModal('changePwModal')">🔒 كلمة المرور</button>
+      <button class="btn btn-outline" onclick="openModal('binSetupModal')">☁️ السحابة</button>
+      <button class="btn btn-danger" onclick="adminLogout()">خروج</button>`;
+  } else if(isTempUser){
+    ha.innerHTML=`
+      <span class="temp-badge">🗝️ ${tempLabel||'مؤقت'}</span>
+      <button class="btn btn-danger" onclick="adminLogout()">خروج</button>`;
+  } else {
+    ha.innerHTML=`<button class="btn btn-outline" onclick="openAdminLogin()">🔑 دخول المدير</button>`;
+  }
+  render();
+}
+
+function adminLogout(){ isAdmin=false; isTempUser=false; updateAdminUI(); toast('👋 تم الخروج'); }
+
+function doChangePw(){
+  const o=document.getElementById('oldPw').value;
+  const n=document.getElementById('newPw').value;
+  const n2=document.getElementById('newPw2').value;
+  if(o!==adminPass){toast('❌ الحالية خاطئة');return;}
+  if(!n){toast('⚠️ أدخل كلمة جديدة');return;}
+  if(n!==n2){toast('⚠️ لا تتطابقان');return;}
+  adminPass=n;
+  closeModal('changePwModal');
+  ['oldPw','newPw','newPw2'].forEach(i=>document.getElementById(i).value='');
+  toast('✅ تم تغيير كلمة المرور');
+}
+
+// ══════════════════════════════════════════════════
+//  TEMP PASSWORDS
+// ══════════════════════════════════════════════════
+function addTempPass(){
+  const label=document.getElementById('tpLabel').value.trim();
+  const pass =document.getElementById('tpPass').value.trim();
+  const days =parseInt(document.getElementById('tpExpiry').value);
+  if(!label){toast('⚠️ أدخل اسماً');return;}
+  if(!pass) {toast('⚠️ أدخل كلمة المرور');return;}
+  if(pass===adminPass){toast('⚠️ لا يمكن استخدام كلمة المدير');return;}
+  const expiry=days===0?0:Date.now()+days*86400000;
+  tempPasswords.push({id:Date.now().toString(),label,pass,expiry});
+  saveTempPasswords(); renderTempTable();
+  document.getElementById('tpLabel').value='';
+  document.getElementById('tpPass').value='';
+  toast('✅ تمت الإضافة');
+}
+function deleteTempPass(id){
+  tempPasswords=tempPasswords.filter(tp=>tp.id!==id);
+  saveTempPasswords(); renderTempTable(); toast('🗑️ تم الحذف');
+}
+function renderTempTable(){
+  const tb=document.getElementById('tpTableBody');
+  if(!tempPasswords.length){
+    tb.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--text-dim);padding:14px">لا توجد كلمات مرور مؤقتة</td></tr>';
+    return;
+  }
+  const now=Date.now();
+  tb.innerHTML=tempPasswords.map(tp=>{
+    const ok=tp.expiry===0||tp.expiry>now;
+    const ex=tp.expiry===0?'بدون انتهاء':new Date(tp.expiry).toLocaleDateString('ar-EG',{day:'numeric',month:'short',year:'numeric'});
+    return `<tr>
+      <td>${tp.label}</td>
+      <td><span class="pw-code">${tp.pass}</span></td>
+      <td style="font-size:11px;color:var(--text-dim)">${ex}</td>
+      <td>${ok?'<span class="badge-active">✅ فعّالة</span>':'<span class="badge-expired">❌ منتهية</span>'}</td>
+      <td><button class="node-btn node-btn-del" onclick="deleteTempPass('${tp.id}')">🗑️</button></td>
+    </tr>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════
+//  EXPORT IMAGE  (html2canvas — high resolution)
+// ══════════════════════════════════════════════════
+async function exportImage(){
+  const ov=document.getElementById('exportOverlay');
+  ov.classList.add('show');
+
+  // Temporarily hide action buttons inside nodes
+  const btns=document.querySelectorAll('.node-actions');
+  btns.forEach(b=>b.style.display='none');
+
+  const canvas=document.getElementById('tree-canvas');
+  const scale=2; // 2× for high DPI
+
+  try{
+    const c=await html2canvas(canvas,{
+      scale,
+      backgroundColor:'#0f0e0c',
+      useCORS:true,
+      logging:false,
+      width:canvas.scrollWidth,
+      height:canvas.scrollHeight,
+      windowWidth:canvas.scrollWidth,
+      windowHeight:canvas.scrollHeight
+    });
+    const link=document.createElement('a');
+    link.download='family-tree.png';
+    link.href=c.toDataURL('image/png');
+    link.click();
+    toast('✅ تم تصدير الصورة بجودة عالية');
+  }catch(e){
+    toast('❌ فشل التصدير');
+    console.error(e);
+  }
+
+  btns.forEach(b=>b.style.display='');
+  ov.classList.remove('show');
+}
+
+// ══════════════════════════════════════════════════
+//  TOAST
+// ══════════════════════════════════════════════════
+let _tt;
+function toast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('show');
+  clearTimeout(_tt); _tt=setTimeout(()=>el.classList.remove('show'),2800);
+}
+
+// ══════════════════════════════════════════════════
+//  SEARCH
+// ══════════════════════════════════════════════════
+
+/* بناء مسار الأجداد لأي شخص: ["شاكر","محمد","خالد"] */
+function getAncestorChain(id){
+  const chain=[];
+  let cur=id;
+  while(cur){
+    chain.unshift(nodes[cur].name);
+    cur=nodes[cur].parentId;
+  }
+  return chain;
+}
+
+/* مطابقة الاستعلام مع الشخص:
+   يتعامل مع الأسماء المركبة بذكاء
+   - "عبد الله" = شخص اسمه يحتوي "عبد الله"
+   - "محمد عبد الناصر" = شخص "محمد" وأبوه يحتوي "عبد الناصر" */
+function matchSearch(id, query){
+  const parts = query.trim().split(/\s+/).filter(Boolean);
+  if(!parts.length) return false;
+  
+  const chain = getAncestorChain(id); // [جد_أعلى, ..., أب, الشخص]
+  const reversed = [...chain].reverse(); // [الشخص, أبوه, جده, ...]
+  
+  let partIdx = 0;
+  let personIdx = 0;
+  
+  while(partIdx < parts.length && personIdx < reversed.length){
+    const person = reversed[personIdx];
+    
+    // محاولة 1: هل اسم الشخص يحتوي على الكلمة الحالية
+    if(person.includes(parts[partIdx])){
+      partIdx++;
+      continue;
+    }
+    
+    // محاولة 2: جرّب دمج الكلمات الحالية والتالية
+    let found = false;
+    for(let combineCount = 2; combineCount <= 3 && partIdx + combineCount <= parts.length; combineCount++){
+      const combined = parts.slice(partIdx, partIdx + combineCount).join(' ');
+      if(person.includes(combined)){
+        partIdx += combineCount;
+        found = true;
+        break;
+      }
+    }
+    
+    if(found){
+      personIdx++;
+      continue;
+    }
+    
+    // لم نجد مطابقة، انتقل للشخص التالي
+    personIdx++;
+  }
+  
+  // نجح إذا طابقنا جميع الأجزاء
+  return partIdx === parts.length;
+}
+
+let _searchTimer=null;
+function onSearchInput(){
+  clearTimeout(_searchTimer);
+  _searchTimer=setTimeout(()=>doSearch(),180);
+}
+
+function doSearch(){
+  const q=document.getElementById('searchInput').value.trim();
+  const resBox=document.getElementById('searchResults');
+  clearHighlight();
+  if(!q){ resBox.classList.remove('open'); resBox.innerHTML=''; return; }
+
+  const matches=Object.keys(nodes).filter(id=>matchSearch(id,q));
+  if(!matches.length){
+    resBox.innerHTML='<div class="sr-item" style="color:var(--text-dim)">لا توجد نتائج</div>';
+    resBox.classList.add('open');
+    return;
+  }
+
+  resBox.innerHTML=matches.slice(0,12).map(id=>{
+    const chain=getAncestorChain(id);
+    const name=chain[chain.length-1];
+    const ancestors=chain.slice(0,-1).reverse();
+    const path=ancestors.join(' ← ');
+    return `<div class="sr-item" onclick="focusNode('${id}')">
+      <div><strong>${name}</strong></div>
+      ${path?`<div class="sr-path" dir="rtl">${path}</div>`:''}
+    </div>`;
+  }).join('');
+  resBox.classList.add('open');
+}
+
+function onSearchKey(e){
+  if(e.key==='Escape') clearSearch();
+}
+
+let _lastFocusedId = null;
+
+function focusNode(id){
+  _lastFocusedId = id;
+  document.getElementById('searchResults').classList.remove('open');
+  clearHighlight();
+
+  const n=nodes[id];
+  if(!n) return;
+
+  // تضيء العقدة
+  const nodeEl=document.getElementById('node-'+id);
+  if(nodeEl) nodeEl.classList.add('search-highlight');
+
+  // إطار مرئي حول العقدة
+  const frame=document.getElementById('focusFrame');
+  frame.style.display='block';
+  frame.style.left=(n.x-8)+'px';
+  frame.style.top =(n.y-8)+'px';
+  frame.style.width=(NODE_W+16)+'px';
+  frame.style.height=(NODE_H+16)+'px';
+  setTimeout(()=>{ if(frame) frame.style.display='none'; },3500);
+
+  // Scroll: استخدم scrollIntoView على العقدة مباشرة ثم صحّح للتوسيط
+  if(nodeEl){
+    setTimeout(()=>{
+      nodeEl.scrollIntoView({behavior:'smooth', block:'center', inline:'center'});
+    }, 50);
+  }
+}
+
+function clearHighlight(){
+  document.querySelectorAll('.node.search-highlight').forEach(el=>el.classList.remove('search-highlight'));
+  const frame=document.getElementById('focusFrame');
+  if(frame) frame.style.display='none';
+}
+
+function clearSearch(){
+  document.getElementById('searchInput').value='';
+  document.getElementById('searchResults').classList.remove('open');
+  document.getElementById('searchResults').innerHTML='';
+  clearHighlight();
+}
+
+// أغلق نتائج البحث عند الضغط خارجها
+document.addEventListener('click',e=>{
+  if(!document.getElementById('searchWrap').contains(e.target)){
+    document.getElementById('searchResults').classList.remove('open');
+  }
+});
+
+// ══════════════════════════════════════════════════
+//  EXPORT PARTIAL (شخص + أبوه + أبناؤه)
+// ══════════════════════════════════════════════════
+function openExportPartial(){
+  if(!_lastFocusedId || !nodes[_lastFocusedId]){
+    toast('🔍 اضغط على اسم شخص في نتائج البحث أولاً');
+    return;
+  }
+  exportPartial(_lastFocusedId);
+}
+
+async function exportPartial(id){
+  const n=nodes[id];
+  if(!n){ toast('❌ الشخص غير موجود'); return; }
+
+  const ov=document.getElementById('exportOverlay');
+  ov.querySelector('p').textContent='⏳ جاري تصدير '+n.name+'...';
+  ov.classList.add('show');
+
+  // بناء السلسلة: من أكبر جد وصولاً للشخص
+  const ancestry=[]; // [جد_أعلى, ..., أب, الشخص]
+  let cur=id;
+  while(cur){
+    ancestry.unshift(cur);
+    cur=nodes[cur].parentId;
+  }
+
+  // جمع أبناء الشخص
+  const children = Object.values(nodes).filter(c=>c.parentId===id);
+
+  // ترتيب الشجرة العمودية
+  const NW=140, NH=70;
+  const pad=60;
+  const vGap=100; // بين الطبقات
+  const hGap=50; // بين الأخوة
+
+  // حساب الحجم
+  const levels=ancestry.length+1; // أسلافه + الأبناء
+  const maxWidth=Math.max(ancestry.length, children.length);
+  const w=Math.max(maxWidth,1)*NW + (maxWidth+2)*hGap;
+  const h=levels*NH + (levels+1)*vGap + 2*pad;
+
+  const canvas=document.createElement('canvas');
+  canvas.width=w*2; canvas.height=h*2;
+  const ctx=canvas.getContext('2d');
+  ctx.scale(2,2);
+
+  // خلفية
+  ctx.fillStyle='#0f0e0c';
+  ctx.fillRect(0,0,w,h);
+
+  // دالة رسم عقدة
+  const drawNode=(name,x,y,isTarget)=>{
+    const R=8;
+    ctx.beginPath();
+    ctx.moveTo(x+R,y); ctx.lineTo(x+NW-R,y);
+    ctx.arcTo(x+NW,y,x+NW,y+R,R);
+    ctx.lineTo(x+NW,y+NH-R);
+    ctx.arcTo(x+NW,y+NH,x+NW-R,y+NH,R);
+    ctx.lineTo(x+R,y+NH);
+    ctx.arcTo(x,y+NH,x,y+NH-R,R);
+    ctx.lineTo(x,y+R);
+    ctx.arcTo(x,y,x+R,y,R);
+    ctx.closePath();
+
+    const grad=ctx.createLinearGradient(x,y,x,y+NH);
+    grad.addColorStop(0,isTarget?'#2a1f00':'#1c1a15');
+    grad.addColorStop(1,isTarget?'#1a1200':'#141210');
+    ctx.fillStyle=grad; ctx.fill();
+    ctx.strokeStyle=isTarget?'#c9962a':'#3a3020';
+    ctx.lineWidth=isTarget?2:1;
+    ctx.stroke();
+
+    ctx.fillStyle=isTarget?'#e8c84a':'#c9962a';
+    ctx.font=`${isTarget?'bold 13px':'12px'} Tajawal, Arial`;
+    ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.direction='rtl';
+    const words=name.split(' ');
+    if(words.length<=2){
+      ctx.fillText(name,x+NW/2,y+NH/2);
+    }else{
+      ctx.fillText(words.slice(0,2).join(' '),x+NW/2,y+NH/2-8);
+      ctx.font=`${isTarget?'11px':'10px'} Tajawal, Arial`;
+      ctx.fillText(words.slice(2).join(' '),x+NW/2,y+NH/2+8);
+    }
+  };
+
+  ctx.strokeStyle='#c9962a'; ctx.lineWidth=2; ctx.globalAlpha=0.7;
+
+  // رسم الأسلاف من الأعلى للأسفل (عمودياً)
+  for(let i=0; i<ancestry.length; i++){
+    const ancestorId=ancestry[i];
+    const ancestorNode=nodes[ancestorId];
+    const isTarget=(ancestorId===id);
+    const x=(w-NW)/2; // توسيط عمودياً
+    const y=pad+i*(NH+vGap);
+
+    drawNode(ancestorNode.name, x, y, isTarget);
+
+    // خط إلى الشخص التالي
+    if(i<ancestry.length-1){
+      ctx.beginPath();
+      ctx.moveTo(x+NW/2, y+NH);
+      ctx.lineTo(x+NW/2, y+NH+vGap);
+      ctx.stroke();
+    }
+  }
+
+  // رسم الأبناء في الأسفل
+  if(children.length>0){
+    const lastAncestorY=pad+(ancestry.length-1)*(NH+vGap);
+    const childrenY=lastAncestorY+NH+vGap;
+    const childrenWidth=children.length*NW + (children.length+1)*hGap;
+    let childX=(w-childrenWidth)/2+hGap;
+
+    children.forEach((child, idx)=>{
+      const x=childX+idx*(NW+hGap);
+      const y=childrenY;
+      drawNode(child.name, x, y, false);
+
+      // خط من الشخص للابن
+      ctx.beginPath();
+      ctx.moveTo((w-NW)/2+NW/2, lastAncestorY+NH);
+      ctx.lineTo(x+NW/2, y);
+      ctx.stroke();
+    });
+  }
+  ctx.globalAlpha=1;
+
+  try{
+    const dataUrl=canvas.toDataURL('image/png');
+    const link=document.createElement('a');
+    link.download=n.name.replace(/\s+/g,'-')+'.png';
+    link.href=dataUrl;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast('✅ تم تصدير شجرة '+n.name);
+  }catch(e){
+    toast('❌ فشل التصدير: '+e.message);
+    console.error(e);
+  }
+
+  ov.classList.remove('show');
+  ov.querySelector('p').textContent='⏳ جاري تصدير الصورة...';
+}
+
+// ══════════════════════════════════════════════════
+//  ZOOM SYSTEM (Pinch Zoom + Wheel Zoom)
+// ══════════════════════════════════════════════════
+let currentZoom = 1;
+const MIN_ZOOM = 0.5; // تصغير حتى 50%
+const MAX_ZOOM = 3;   // تكبير حتى 300%
+const ZOOM_STEP = 0.1;
+
+function setZoom(newZoom) {
+  const tree = document.getElementById('tree-canvas');
+  if(!tree) return;
+  
+  currentZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, newZoom));
+  
+  // استخدام zoom property بدل transform (يعمل بشكل أفضل على الهاتف)
+  tree.style.zoom = currentZoom;
+}
+
+// عجلة الماوس (أو trackpad)
+document.addEventListener('wheel', (e) => {
+  const wrap = document.getElementById('canvas-wrap');
+  if(!wrap || !wrap.contains(e.target)) return;
+  
+  if(e.ctrlKey || e.metaKey) {
+    e.preventDefault();
+    const direction = e.deltaY > 0 ? -1 : 1;
+    setZoom(currentZoom + direction * ZOOM_STEP);
+  }
+}, { passive: false });
+
+// Pinch Zoom للهاتف
+let lastDistance = 0;
+let zoomStarted = false;
+
+document.addEventListener('touchstart', (e) => {
+  if(e.touches.length === 2) {
+    zoomStarted = true;
+    const dx = e.touches[0].clientX - e.touches[1].clientX;
+    const dy = e.touches[0].clientY - e.touches[1].clientY;
+    lastDistance = Math.sqrt(dx*dx + dy*dy);
+  }
+}, { passive: true });
+
+document.addEventListener('touchmove', (e) => {
+  if(e.touches.length === 2 && zoomStarted) {
+    const wrap = document.getElementById('canvas-wrap');
+    if(!wrap || !wrap.contains(e.target)) return;
+    
+    e.preventDefault();
+    const dx = e.touches[0].clientX - e.touches[1].clientX;
+    const dy = e.touches[0].clientY - e.touches[1].clientY;
+    const distance = Math.sqrt(dx*dx + dy*dy);
+    
+    if(lastDistance > 0) {
+      const ratio = distance / lastDistance;
+      const change = (ratio - 1) * 0.5;
+      setZoom(currentZoom + change);
+    }
+    lastDistance = distance;
+  }
+}, { passive: false });
+
+document.addEventListener('touchend', () => {
+  zoomStarted = false;
+  lastDistance = 0;
+}, { passive: true });
+</script>
+</body>
+</html>
