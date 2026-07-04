@@ -14,6 +14,16 @@
     --border:#2e2820; --red:#c0392b; --green:#27ae60;
     --node-w:160px;
   }
+  html.light-theme {
+    --bg:#f5f0e8; --surface:#fffdf7; --surface2:#f0ead8;
+    --gold:#a07020; --gold-light:#c9962a; --gold-dim:#c9a84c;
+    --text:#1a1208; --text-dim:#6a5a42;
+    --border:#d4c4a0; --red:#c0392b; --green:#27ae60;
+  }
+  html.light-theme header{background:linear-gradient(135deg,#f0ead8,#e8e0cc);}
+  html.light-theme #canvas-wrap{background:radial-gradient(ellipse 80% 50% at 50% 0%,rgba(201,150,42,.08) 0%,transparent 60%),var(--bg);}
+  html.light-theme .node{box-shadow:0 2px 8px rgba(0,0,0,.08);}
+  html.light-theme svg line, html.light-theme svg path{stroke:#a07020 !important;opacity:0.6;}
   *{margin:0;padding:0;box-sizing:border-box;}
   body{background:var(--bg);color:var(--text);font-family:'Tajawal',sans-serif;min-height:100vh;overflow-x:hidden;}
 
@@ -51,8 +61,11 @@
     background:var(--surface);border-bottom:1px solid var(--border);flex-wrap:wrap;}
 
   /* ── CANVAS ── */
-  #canvas-wrap{width:100%;min-height:calc(100vh - 110px);overflow:auto;position:relative;
-    background:radial-gradient(ellipse 80% 50% at 50% 0%,rgba(201,150,42,.04) 0%,transparent 60%),var(--bg);}
+  #canvas-wrap{width:100%;height:calc(100vh - 110px);overflow:hidden;position:relative;
+    background:radial-gradient(ellipse 80% 50% at 50% 0%,rgba(201,150,42,.04) 0%,transparent 60%),var(--bg);
+    cursor:grab;touch-action:none;user-select:none;}
+  #canvas-wrap.panning{cursor:grabbing;}
+  #tree-inner{position:absolute;top:0;left:0;transform-origin:0 0;will-change:transform;}
   #tree-canvas{position:relative;padding:60px 40px 120px;}
   svg#lines{position:absolute;top:0;left:0;pointer-events:none;overflow:visible;}
 
@@ -80,6 +93,57 @@
   .node-btn-edit:hover{background:rgba(201,150,42,.3);}
   .node-btn-del{background:rgba(192,57,43,.15);color:#e74c3c;border:1px solid rgba(192,57,43,.4);}
   .node-btn-del:hover{background:rgba(192,57,43,.3);}
+  .node-btn-parent{background:rgba(52,152,219,.15);color:#5dade2;border:1px solid rgba(52,152,219,.4);}
+  .node-btn-parent:hover{background:rgba(52,152,219,.3);}
+
+  /* ── زر +/− للوضع المطوي ── */
+  .node-expand-btn{
+    position:absolute;bottom:-22px;left:50%;transform:translateX(-50%);
+    width:26px;height:26px;border-radius:50%;
+    background:var(--gold);color:#0f0e0c;
+    border:2px solid var(--bg);
+    font-size:16px;font-weight:700;line-height:1;
+    cursor:pointer;display:flex;align-items:center;justify-content:center;
+    z-index:20;box-shadow:0 2px 8px rgba(0,0,0,.4);
+    transition:transform .15s,background .15s;
+    font-family:'Tajawal',sans-serif;
+  }
+  .node-expand-btn:hover{background:var(--gold-light);transform:translateX(-50%) scale(1.15);}
+  /* إخفاء كل الأسهم في الوضع المطوي */
+  .collapsed-mode .sibling-nav{display:none !important;}
+  .collapsed-mode .sibling-nav.nav-down{display:none !important;}
+
+  /* ── أزرار التنقل بين الإخوة ── */
+  .sibling-nav{position:absolute;top:50%;transform:translateY(-50%);
+    display:flex;flex-direction:column;gap:3px;z-index:10;}
+  .sibling-nav.nav-right{right:-28px;}
+  .sibling-nav.nav-left{left:-28px;}
+  .sibling-nav.nav-up{top:-28px;left:50%;transform:translateX(-50%);}
+  .sibling-nav.nav-down{top:auto;bottom:-28px;left:50%;transform:translateX(-50%);}
+  .sibnav-btn{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--gold-dim);
+    background:var(--surface2);color:var(--gold);font-size:11px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    transition:all .15s;padding:0;line-height:1;}
+  .sibnav-btn:hover{background:var(--gold);color:#000;border-color:var(--gold);
+    transform:scale(1.15);}
+  .sibnav-up{font-size:13px;}
+
+  /* ── LONG-PRESS TOOLTIP ── */
+  #lpTooltip{
+    display:none;position:fixed;z-index:600;
+    background:linear-gradient(135deg,#1e1a12,#141108);
+    border:1px solid var(--gold);border-radius:13px;
+    padding:12px 16px;max-width:260px;
+    box-shadow:0 8px 32px rgba(0,0,0,.8),0 0 0 1px rgba(201,150,42,.15);
+    pointer-events:none;text-align:right;direction:rtl;
+    animation:lpFadeIn .15s ease;
+  }
+  @keyframes lpFadeIn{from{opacity:0;transform:scale(.93)}to{opacity:1;transform:scale(1)}}
+  #lpTooltip.show{display:block;}
+  #lpTooltip .lp-name{font-size:15px;font-weight:700;color:var(--gold-light);margin-bottom:6px;word-break:break-word;white-space:normal;}
+  #lpTooltip .lp-chain{font-size:11px;color:var(--text-dim);line-height:2;word-break:break-word;white-space:normal;}
+  #lpTooltip .lp-chain .lp-arrow{color:var(--gold-dim);margin:0 3px;}
+  #lpTooltip .lp-meta{font-size:10px;color:var(--text-dim);margin-top:6px;border-top:1px solid var(--border);padding-top:6px;}
 
   /* ── MODAL ── */
   .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;
@@ -126,11 +190,52 @@
   .badge-expired{background:rgba(192,57,43,.15);color:#e74c3c;border:1px solid rgba(192,57,43,.3);
     padding:1px 7px;border-radius:10px;font-size:10px;}
 
-  /* ── EXPORT IMAGE PROGRESS ── */
+  /* ── VISITORS ── */
+  .visitor-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;
+    padding:10px 12px;font-size:11px;line-height:1.8;}
+  .visitor-card .vc-time{color:var(--gold);font-weight:700;font-size:12px;}
+  .visitor-card .vc-info{color:var(--text-dim);}
+  .visitor-stat{background:var(--surface2);border:1px solid var(--border);border-radius:8px;
+    padding:8px 14px;text-align:center;min-width:80px;}
+  .visitor-stat .vs-num{font-size:20px;font-weight:700;color:var(--gold);}
+  .visitor-stat .vs-lbl{font-size:10px;color:var(--text-dim);}
+
+  /* ── EXPORT OVERLAY PROGRESS ── */
   #exportOverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:400;
     align-items:center;justify-content:center;flex-direction:column;gap:16px;}
   #exportOverlay.show{display:flex;}
   #exportOverlay p{color:var(--gold-light);font-size:16px;font-weight:600;}
+
+  /* ── EXPORT MODAL ── */
+  .export-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+  .export-card{background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;
+    padding:14px 12px;cursor:pointer;text-align:center;transition:all .2s;user-select:none;}
+  .export-card:hover{border-color:var(--gold-dim);background:rgba(201,150,42,.08);}
+  .export-card.selected{border-color:var(--gold);background:rgba(201,150,42,.15);
+    box-shadow:0 0 0 2px rgba(201,150,42,.25);}
+  .export-card .ec-icon{font-size:26px;margin-bottom:7px;}
+  .export-card .ec-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px;}
+  .export-card .ec-desc{font-size:10px;color:var(--text-dim);line-height:1.5;}
+  .export-section{margin-bottom:14px;}
+  .export-section-label{font-size:11px;font-weight:700;color:var(--text-dim);
+    text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;}
+  .export-scope-btns{display:flex;gap:7px;}
+  .export-scope-btn{flex:1;min-width:140px;padding:7px 10px;border-radius:8px;border:1.5px solid var(--border);
+    background:var(--surface2);color:var(--text-dim);cursor:pointer;font-family:'Tajawal',sans-serif;
+    font-size:11px;font-weight:600;transition:all .2s;text-align:center;}
+  .export-scope-btn:hover{border-color:var(--gold-dim);color:var(--text);}
+  .export-scope-btn.active{border-color:var(--gold);background:rgba(201,150,42,.15);color:var(--gold);}
+  .export-scope-btn.disabled{opacity:.35;pointer-events:none;}
+  .export-quality-row{display:flex;gap:7px;align-items:center;}
+  .export-quality-row label{font-size:12px;color:var(--text-dim);white-space:nowrap;}
+  .export-quality-row select{flex:1;background:var(--surface2);border:1px solid var(--border);
+    border-radius:7px;padding:6px 10px;color:var(--text);font-family:'Tajawal',sans-serif;
+    font-size:12px;outline:none;}
+  .export-preview-wrap{background:var(--surface2);border:1px solid var(--border);border-radius:10px;
+    padding:10px;min-height:80px;display:flex;align-items:center;justify-content:center;
+    margin-bottom:12px;overflow:hidden;}
+  .export-preview-wrap canvas{max-width:100%;border-radius:6px;}
+  #exportModal .modal{width:460px;}
 
   /* ── SEARCH BAR ── */
   #searchWrap{display:flex;align-items:center;gap:6px;position:relative;}
@@ -176,12 +281,13 @@
     <span class="logo-text">شجرة العائلة</span>
   </div>
   <div class="header-actions" id="headerActions">
+    <button class="btn btn-outline" onclick="openModal('helpModal')" title="إرشادات الاستخدام">❓ مساعدة</button>
     <button class="btn btn-outline" onclick="openAdminLogin()">🔑 دخول المدير</button>
   </div>
 </header>
 
 <div class="toolbar" id="toolbar">
-  <button class="btn btn-blue" onclick="exportImage()">📷 تصدير صورة</button>
+  <button class="btn btn-blue" onclick="openExportModal()">📤 تصدير</button>
   <!-- admin-only buttons injected here -->
 </div>
 <!-- SEARCH BAR (fixed below header, always visible) -->
@@ -197,6 +303,7 @@
 </div>
 
 <div id="canvas-wrap">
+  <div id="tree-inner">
   <div id="tree-canvas">
     <svg id="lines" xmlns="http://www.w3.org/2000/svg"></svg>
     <div id="focusFrame"></div>
@@ -206,12 +313,101 @@
       <p style="font-size:12px;color:var(--text-dim)" id="emptyHint">سجّل دخولك كمدير لبدء الإضافة</p>
     </div>
   </div>
+  </div>
 </div>
 
 <div id="toast"></div>
+<div id="lpTooltip"></div>
 
-<!-- export overlay -->
-<div id="exportOverlay"><p>⏳ جاري تصدير الصورة...</p></div>
+<!-- export overlay / progress -->
+<div id="exportOverlay"><p id="exportOverlayMsg">⏳ جاري التصدير...</p></div>
+
+<!-- ══ EXPORT MODAL ══ -->
+<div class="modal-bg" id="exportModal">
+  <div class="modal" style="width:460px;max-width:96vw;">
+    <h3>📤 تصدير شجرة العائلة</h3>
+
+    <!-- النطاق -->
+    <div class="export-section">
+      <div class="export-section-label">النطاق</div>
+      <!-- صف 1: كل الشجرة -->
+      <div class="export-scope-btns" style="margin-bottom:7px">
+        <div class="export-scope-btn active" id="scopeAll" onclick="setExportScope('all')">🌳 الشجرة كاملة</div>
+      </div>
+      <!-- صف 2: خيارات الشخص المحدد -->
+      <div style="font-size:10px;color:var(--text-dim);margin-bottom:5px;font-weight:600" id="partialLabel">
+        الشخص المحدد: <span id="partialName" style="color:var(--gold)">—</span>
+      </div>
+      <div class="export-scope-btns" style="flex-wrap:wrap;gap:6px;" id="partialScopeBtns">
+        <div class="export-scope-btn" id="scopeAncestorsChildren" onclick="setExportScope('ancestorsChildren')" title="الشخص + كل أجداده + أبناؤه المباشرون">👨‍👦 مع الأجداد والأبناء</div>
+        <div class="export-scope-btn" id="scopeDescendants" onclick="setExportScope('descendants')" title="الشخص + أبناؤه + أحفاده حتى آخر الشجرة">🌿 مع كل الذرية</div>
+        <div class="export-scope-btn" id="scopeFamily" onclick="setExportScope('family')" title="الشخص + أبوه + إخوانه + أبناؤه">👨‍👩‍👧‍👦 العائلة المباشرة</div>
+        <div class="export-scope-btn" id="scopeFamilyDeep" onclick="setExportScope('familyDeep')" title="الشخص + أبوه + إخوانه + أبناؤه + أبناء الإخوان">👨‍👩‍👧‍👦+ مع أبناء الإخوان</div>
+      </div>
+      <!-- خيار إضافي: أبناء الإخوة -->
+      <div id="sibChildrenToggleWrap" style="display:none;margin-top:7px;align-items:center;gap:8px">
+      </div>
+    </div>
+
+    <!-- خيارات الجودة -->
+    <div class="export-section">
+      <div class="export-section-label">الجودة والمظهر</div>
+      <div class="export-quality-row">
+        <label>الدقة:</label>
+        <select id="exportScale">
+          <option value="1">عادية (×1)</option>
+          <option value="2" selected>عالية (×2)</option>
+          <option value="3">ممتازة (×3)</option>
+          <option value="4">طباعة (×4)</option>
+        </select>
+        <label style="margin-right:10px">خلفية:</label>
+        <select id="exportBg">
+          <option value="dark" selected>داكنة</option>
+          <option value="light">فاتحة</option>
+          <option value="transparent">شفافة</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- اختيار الصيغة -->
+    <div class="export-section">
+      <div class="export-section-label">صيغة الحفظ</div>
+      <div class="export-grid">
+        <div class="export-card selected" data-fmt="png" onclick="selectFmt(this,'png')">
+          <div class="ec-icon">🖼️</div>
+          <div class="ec-title">PNG</div>
+          <div class="ec-desc">جودة عالية مع دعم الشفافية</div>
+        </div>
+        <div class="export-card" data-fmt="jpg" onclick="selectFmt(this,'jpg')">
+          <div class="ec-icon">📷</div>
+          <div class="ec-title">JPG</div>
+          <div class="ec-desc">حجم أصغر مناسب للمشاركة</div>
+        </div>
+        <div class="export-card" data-fmt="svg" onclick="selectFmt(this,'svg')">
+          <div class="ec-icon">📐</div>
+          <div class="ec-title">SVG</div>
+          <div class="ec-desc">رسوم متجهة قابلة للتكبير بلا حدود</div>
+        </div>
+        <div class="export-card" data-fmt="json" id="jsonExportCard" onclick="selectFmt(this,'json')">
+          <div class="ec-icon">💾</div>
+          <div class="ec-title">JSON احتياطي</div>
+          <div class="ec-desc">حفظ كامل البيانات للاستعادة لاحقاً</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- معاينة مصغرة -->
+    <div class="export-preview-wrap" id="exportPreviewWrap">
+      <span style="color:var(--text-dim);font-size:12px" id="exportPreviewMsg">اضغط "معاينة" لرؤية الشجرة قبل الحفظ</span>
+    </div>
+
+    <div class="modal-actions" style="flex-wrap:wrap;gap:8px;">
+      <button class="btn btn-outline" onclick="closeModal('exportModal')">إلغاء</button>
+      <button class="btn btn-outline" onclick="runExportPreview()">👁️ معاينة</button>
+      <button class="btn btn-gold" onclick="runExport()">⬇️ تحميل</button>
+    </div>
+  </div>
+</div>
 
 <!-- ══ ADD/EDIT MODAL ══ -->
 <div class="modal-bg" id="personModal">
@@ -225,6 +421,15 @@
       <input type="number" id="pBirth" placeholder="مثال: 1970" min="1800" max="2099"></div>
     <div class="form-group"><label>ملاحظة</label>
       <input type="text" id="pNote" placeholder="أي معلومة إضافية"></div>
+    <!-- أزرار الترتيب — تظهر فقط عند التعديل -->
+    <div id="reorderBtns" style="display:none;margin-bottom:12px;">
+      <div style="font-size:11px;color:var(--text-dim);margin-bottom:6px;font-weight:600">ترتيب بين الإخوة:</div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-outline" style="flex:1;font-size:12px" onclick="reorderNode('right')">▶ تأخير (يمين)</button>
+        <button class="btn btn-outline" style="flex:1;font-size:12px" onclick="reorderNode('left')">تقديم (يسار) ◀</button>
+      </div>
+      <div id="reorderPos" style="font-size:11px;color:var(--gold);text-align:center;margin-top:5px"></div>
+    </div>
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeModal('personModal')">إلغاء</button>
       <button class="btn btn-gold" onclick="savePerson()">حفظ</button>
@@ -239,6 +444,11 @@
     <div class="form-group"><label>كلمة المرور</label>
       <input type="password" id="adminPass" placeholder="••••••••"
         onkeydown="if(event.key==='Enter')doAdminLogin()"></div>
+    <div class="form-group"><label>🔐 Master Key (للحفظ)</label>
+      <input type="password" id="adminMasterKey" placeholder="$2a$10$..."
+        onkeydown="if(event.key==='Enter')doAdminLogin()">
+      <div style="font-size:10px;color:var(--text-dim);margin-top:4px">مطلوب فقط للإضافة والتعديل — اتركه فارغاً للعرض فقط</div>
+    </div>
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeModal('adminModal')">إلغاء</button>
       <button class="btn btn-gold" onclick="doAdminLogin()">دخول</button>
@@ -260,17 +470,64 @@
   </div>
 </div>
 
+<!-- ══ HELP MODAL ══ -->
+<div class="modal-bg" id="helpModal">
+  <div class="modal" style="width:520px;max-width:96vw;max-height:82vh;display:flex;flex-direction:column">
+    <h3>❓ إرشادات استخدام شجرة العائلة</h3>
+    <div style="flex:1;overflow-y:auto;font-size:13px;line-height:2;color:var(--text);padding-left:4px">
+
+      <div style="font-weight:700;color:var(--gold);margin:10px 0 6px">🔍 التصفح والبحث</div>
+      <div style="color:var(--text-dim)">
+        • ابحث باسم الشخص في خانة البحث أعلى الصفحة، ثم اضغط على النتيجة للانتقال إليه مباشرة.<br>
+        • اضغط ضغطاً مطولاً على أي اسم لرؤية سلسلة أجداده كاملة.<br>
+        • استخدم إصبعين للتكبير والتصغير (Pinch)، وإصبعاً واحداً للتحرك بحرية في الشجرة.<br>
+        • على كل شخص أزرار صغيرة: ↑ للأب، ↓ للأبناء، ◀▶ للإخوة البعيدين — لتسهيل التنقل.<br>
+        • زر 🎯 يعيد توسيط الشجرة في أي وقت إذا ضعت داخلها.<br>
+        • زر 🌙/☀️ يبدّل بين المظهر الداكن والفاتح.
+      </div>
+
+      <div style="font-weight:700;color:var(--gold);margin:14px 0 6px">🌿 طريقة العرض</div>
+      <div style="color:var(--text-dim)">
+        • زر <b>🌳 مفتوحة</b> يعرض الشجرة كاملة دفعة واحدة — مناسب للاطلاع العام والتصدير.<br>
+        • زر <b>🌿 مطوية</b> يعرض الشجرة بشكل تفاعلي — يظهر الجذر فقط في البداية، وعند الضغط على <b>+</b> تنكشف أبناء ذلك الشخص، وعند الضغط على <b>−</b> تُطوى من جديد وتعود إليه تلقائياً.<br>
+        • الوضع المطوي مناسب للتنقل داخل الشجرة الكبيرة والبحث عن فرع بعينه بدون ضياع.
+      </div>
+
+      <div style="font-weight:700;color:var(--gold);margin:14px 0 6px">📤 التصدير</div>
+      <div style="color:var(--text-dim)">
+        • اضغط زر "تصدير" لحفظ صورة من الشجرة.<br>
+        • يمكنك اختيار: الشجرة كاملة، أو نطاق جزئي (أجداد وأبناء، كل الذرية، العائلة المباشرة...).<br>
+        • صيغ الحفظ المتاحة: PNG، JPG، SVG (متجه عالي الجودة)، وJSON (نسخة احتياطية كاملة من البيانات).
+      </div>
+
+    </div>
+    <div class="modal-actions" style="margin-top:14px">
+      <button class="btn btn-gold" onclick="closeModal('helpModal')">فهمت، إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ VISITORS MODAL ══ -->
+<div class="modal-bg" id="visitorsModal">
+  <div class="modal" style="width:480px;max-width:96vw;max-height:80vh;display:flex;flex-direction:column">
+    <h3>👁️ سجل الزوار</h3>
+    <div id="visitorsStats" style="display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap"></div>
+    <div id="visitorsList" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:6px"></div>
+    <div class="modal-actions" style="margin-top:12px">
+      <button class="btn btn-outline" onclick="closeModal('visitorsModal')">إغلاق</button>
+      <button class="btn btn-danger" onclick="clearVisitors()">🗑️ مسح السجل</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══ DELETE CONFIRM ══ -->
 <div class="modal-bg" id="deleteModal">
   <div class="modal">
-    <h3>⚠️ تأكيد الحذف</h3>
-    <p style="color:var(--text-dim);text-align:center;margin-bottom:14px;font-size:13px">
-      هل تريد حذف هذا الشخص وكل أبنائه؟<br>
-      <strong id="deleteTargetName" style="color:var(--gold)"></strong>
-    </p>
+    <h3 id="deleteModalTitle">⚠️ تأكيد الحذف</h3>
+    <div id="deleteModalBody" style="text-align:center;margin-bottom:14px;font-size:13px"></div>
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeModal('deleteModal')">إلغاء</button>
-      <button class="btn btn-danger" onclick="confirmDelete()">حذف</button>
+      <button class="btn btn-danger" id="deleteConfirmBtn" onclick="confirmDelete()">حذف</button>
     </div>
   </div>
 </div>
@@ -336,7 +593,7 @@
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
 <script>
 // ══════════════════════════════════════════════════
 //  STATE
@@ -344,7 +601,7 @@
 let nodes        = {};
 let isAdmin      = false;
 let isTempUser   = false;
-let adminPass    = 'Anan851103';
+let adminPass    = 'ecde979e3bb2f03d7af67d91a143a0da676e2bf365fb64d8c5563d70f0e84787'; // SHA-256
 let tempPasswords= [];
 let editingId    = null;
 let editingParentId = null;
@@ -359,9 +616,11 @@ const H_GAP  = 50,  V_GAP  = 90;
 // ══════════════════════════════════════════════════
 const CFG_KEY = 'ftree_cfg';
 const BIN_BASE = 'https://api.jsonbin.io/v3/b';
-let binMasterKey='$2a$10$Ljsisj2JIOoeQhWi7Qr9B.64VB0Jfc/y2uM1MAgNwWEP5qWrzSflu';
+let binMasterKey='';  // لا يُخزَّن في الكود — يُدخله المدير فقط عند تسجيل الدخول
+let binReadKey='$2a$10$gHi821O7wSvpjKS3fGt4De7JVpXsXl3OgNI9ssOjtMjdzC7e2bDWi'; // للقراءة فقط (عام)
 let binDataId='6a2ddb99f5f4af5e29edacdb';
 let binSettingsId='6a2ddbd1da38895dfebc27bc';
+let binVisitorsId='6a4258fada38895dfe0f93f7';
 
 function loadBinConfig(){
   // المفاتيح مدمجة في الكود مباشرة
@@ -377,7 +636,7 @@ function saveBinConfig(){
   toast('✅ تم الحفظ — جاري التحميل...');
   loadFromCloud();
 }
-function isCloudOK(){ return binMasterKey&&binDataId&&binSettingsId; }
+function isCloudOK(){ return (binMasterKey||binReadKey)&&binDataId&&binSettingsId; }
 
 // ══════════════════════════════════════════════════
 //  CLOUD  READ / WRITE
@@ -385,27 +644,68 @@ function isCloudOK(){ return binMasterKey&&binDataId&&binSettingsId; }
 async function loadFromCloud(){
   bar(true);
   try{
-    const r1=await fetch(`${BIN_BASE}/${binDataId}/latest`,{headers:{'X-Master-Key':binMasterKey}});
-    if(r1.ok){const j=await r1.json();const d=j.record||{};nodes=d.nodes||{};nextId=d.nextId||1;}
-    const r2=await fetch(`${BIN_BASE}/${binSettingsId}/latest`,{headers:{'X-Master-Key':binMasterKey}});
+    const headers = binMasterKey
+      ? {'X-Master-Key': binMasterKey}
+      : {'X-Access-Key': binReadKey};
+    const r1=await fetch(`${BIN_BASE}/${binDataId}/latest`,{headers});
+    if(r1.ok){
+      const j=await r1.json();
+      const d=j.record||{};
+      if(d._z){
+        // بيانات مضغوطة
+        try{
+          const decompressed=LZString.decompressFromBase64(d._z);
+          if(decompressed){
+            const payload=JSON.parse(decompressed);
+            nodes=payload.nodes||{}; nextId=payload.nextId||1;
+          }
+        }catch(e){ nodes={}; nextId=1; }
+      } else {
+        // بيانات غير مضغوطة (قديمة)
+        nodes=d.nodes||{}; nextId=d.nextId||1;
+      }
+    }
+    const r2=await fetch(`${BIN_BASE}/${binSettingsId}/latest`,{headers});
     if(r2.ok){const j=await r2.json();tempPasswords=(j.record||{}).tempPws||[];}
   }catch(e){toast('⚠️ تعذّر الاتصال بالسحابة');}
   bar(false); render();
+  // إذا كان الوضع مطوياً، افتح الجذر تلقائياً
+  if(_treeMode==='collapsed'){
+    _expanded.clear();
+    Object.values(nodes).filter(n=>!n.parentId).forEach(n=>_expanded.add(n.id));
+    render();
+  }
+  setTimeout(()=>{ window._userHasPanned=false; window._centerTree&&window._centerTree(); }, 400);
 }
 
 let _saveTimer=null;
 async function save(){
+  if(!binMasterKey){ toast('⚠️ الحفظ يتطلب دخول المدير بمفتاح Master Key'); return; }
   if(!isCloudOK()) return;
   clearTimeout(_saveTimer);
   _saveTimer=setTimeout(async()=>{
     bar(true);
     try{
-      await fetch(`${BIN_BASE}/${binDataId}`,{
+      // ضغط البيانات قبل الإرسال لتجنب تجاوز حد JSONBin
+      const rawJson=JSON.stringify({nodes,nextId});
+      const compressed=LZString.compressToBase64(rawJson);
+      // تحقق من صحة الضغط
+      const verify=LZString.decompressFromBase64(compressed);
+      if(!verify||verify!==rawJson){ toast('❌ خطأ في الضغط، لم يتم الحفظ'); bar(false); return; }
+
+      const res=await fetch(`${BIN_BASE}/${binDataId}`,{
         method:'PUT',
         headers:{'Content-Type':'application/json','X-Master-Key':binMasterKey},
-        body:JSON.stringify({nodes,nextId})
+        body:JSON.stringify({_z:compressed})
       });
-    }catch(e){toast('⚠️ فشل الحفظ');}
+      if(!res.ok){
+        const errTxt=await res.text().catch(()=>'');
+        toast('❌ فشل الحفظ: '+res.status+' — تحقق من Master Key');
+        console.error('Save failed:',res.status,errTxt);
+      } else {
+        toast('✅ تم الحفظ في السحابة');
+      }
+    }catch(e){toast('❌ فشل الحفظ: تعذّر الاتصال');console.error(e);}
     bar(false);
   },800);
 }
@@ -438,20 +738,84 @@ function bar(on){
 window.onload=()=>{
   loadBinConfig();
   if(isCloudOK()) loadFromCloud(); else render();
+  setTimeout(initOrders, 800);
+  setTimeout(recordVisit, 3000);
 };
 
-// ══════════════════════════════════════════════════
-//  AUTO LAYOUT  — always recalculate from scratch
-// ══════════════════════════════════════════════════
+// وضع الشجرة: 'open' = مفتوحة كاملة، 'collapsed' = مطوية
+let _treeMode = 'open'; // الافتراضي دائماً مفتوح عند كل فتح
+localStorage.setItem('treeMode','open');
+const _expanded = new Set();
+
+function toggleTreeMode(){
+  _treeMode = _treeMode==='open' ? 'collapsed' : 'open';
+  localStorage.setItem('treeMode', _treeMode);
+  if(_treeMode==='collapsed'){
+    // أبقِ الجذر مفتوحاً فقط
+    _expanded.clear();
+    Object.values(nodes).filter(n=>!n.parentId).forEach(n=>_expanded.add(n.id));
+  }
+  window._userHasPanned=false;
+  render();
+  setTimeout(()=>window._centerTree&&window._centerTree(), 200);
+}
+
+function toggleExpand(id){
+  if(_expanded.has(id)){
+    // عند الضم: امسح هذه العقدة وكل أحفادها من _expanded
+    function collapseAll(nodeId){
+      _expanded.delete(nodeId);
+      Object.values(nodes).filter(n=>n.parentId===nodeId).forEach(c=>collapseAll(c.id));
+    }
+    collapseAll(id);
+    document.getElementById('lines').innerHTML='';
+    render();
+    // انتقل للعقدة التي طويناها
+    setTimeout(()=>navToSibling(id), 150);
+  } else {
+    _expanded.add(id);
+    document.getElementById('lines').innerHTML='';
+    render();
+  }
+}
+function visibleNodes(){
+  if(_treeMode==='open') return Object.keys(nodes);
+  const visible=new Set();
+  const queue=Object.values(nodes).filter(n=>!n.parentId).map(n=>n.id);
+  const seen=new Set();
+  while(queue.length){
+    const id=queue.shift();
+    if(seen.has(id)) continue; seen.add(id);
+    visible.add(id);
+    if(_expanded.has(id)){
+      const kids=Object.values(nodes).filter(n=>n.parentId===id);
+      kids.sort((a,b)=>(a.order||0)-(b.order||0));
+      kids.forEach(k=>queue.push(k.id));
+    }
+  }
+  return [...visible];
+}
+
 function autoLayout(){
+  // مسافات مضغوطة في الوضع المطوي
+  const hgap = _treeMode==='collapsed' ? 20 : H_GAP;
+  const vgap = _treeMode==='collapsed' ? 30 : V_GAP;
+
   const children={};
   const roots=[];
+
+  // في المطوي: layout للعقد المرئية فقط
+  const vids = _treeMode==='collapsed' ? new Set(visibleNodes()) : null;
+
   Object.values(nodes).forEach(n=>{
-    if(!n.parentId) roots.push(n.id);
-    else{ (children[n.parentId]=children[n.parentId]||[]).push(n.id); }
+    if(vids && !vids.has(n.id)) return;
+    if(!n.parentId||(vids&&!vids.has(n.parentId))) roots.push(n.id);
+    else (children[n.parentId]=children[n.parentId]||[]).push(n.id);
+  });
+  Object.keys(children).forEach(pid=>{
+    children[pid].sort((a,b)=>(nodes[a].order||0)-(nodes[b].order||0));
   });
 
-  // Assign column widths (leaf=1 col, branch=sum of children)
   function spanOf(id){
     const kids=children[id]||[];
     if(!kids.length) return 1;
@@ -461,16 +825,16 @@ function autoLayout(){
   function place(id,depth,colStart){
     const kids=children[id]||[];
     if(!kids.length){
-      nodes[id].x = colStart*(NODE_W+H_GAP)+60;
-      nodes[id].y = depth  *(NODE_H+V_GAP)+60;
+      nodes[id].x=colStart*(NODE_W+hgap)+60;
+      nodes[id].y=depth*(NODE_H+vgap)+60;
       return;
     }
     let cur=colStart;
     kids.forEach(k=>{ place(k,depth+1,cur); cur+=spanOf(k); });
     const first=nodes[kids[0]].x;
-    const last =nodes[kids[kids.length-1]].x;
+    const last=nodes[kids[kids.length-1]].x;
     nodes[id].x=(first+last)/2;
-    nodes[id].y=depth*(NODE_H+V_GAP)+60;
+    nodes[id].y=depth*(NODE_H+vgap)+60;
   }
 
   let col=0;
@@ -483,6 +847,7 @@ function autoLayout(){
 function render(){
   const canvas=document.getElementById('tree-canvas');
   canvas.querySelectorAll('.node').forEach(n=>n.remove());
+  document.getElementById('lines').innerHTML='';
 
   const ids=Object.keys(nodes);
   document.getElementById('emptyState').style.display=ids.length?'none':'block';
@@ -493,17 +858,32 @@ function render(){
 
   if(!ids.length) return;
 
-  autoLayout();
+  // في وضع مطوي: تأكد من فتح الجذر دائماً
+  if(_treeMode==='collapsed' && _expanded.size===0){
+    Object.values(nodes).filter(n=>!n.parentId).forEach(n=>_expanded.add(n.id));
+  }
 
-  // Canvas size
-  let maxX=0,maxY=0;
-  ids.forEach(id=>{ maxX=Math.max(maxX,nodes[id].x+NODE_W+40); maxY=Math.max(maxY,nodes[id].y+NODE_H+40); });
+  autoLayout(); // يحسب x,y للعقد المرئية
+
+  const vids=visibleNodes(); // اجلب القائمة بعد حساب المواضع
+
+  // Canvas size — تجاهل العقد ذات x=0,y=0 (لم تُوضع)
+  let maxX=100,maxY=100;
+  vids.forEach(id=>{
+    const n=nodes[id];
+    if(!n||(!n.x&&!n.y)) return;
+    maxX=Math.max(maxX,n.x+NODE_W+40);
+    maxY=Math.max(maxY,n.y+NODE_H+40);
+  });
   canvas.style.width =maxX+'px';
-  canvas.style.height=Math.max(maxY,window.innerHeight-150)+'px';
+  canvas.style.height=Math.max(maxY,window.innerHeight-150)+400+'px';
   document.getElementById('lines').setAttribute('width', maxX);
   document.getElementById('lines').setAttribute('height',Math.max(maxY,window.innerHeight-150));
 
-  ids.forEach(id=>drawNode(id));
+  // أضف class للوضع المطوي على الـ canvas
+  document.getElementById('canvas-wrap').classList.toggle('collapsed-mode', _treeMode==='collapsed');
+
+  vids.forEach(id=>drawNode(id));
   drawLines();
 }
 
@@ -514,9 +894,15 @@ function updateToolbar(){
   `:'';
   tb.innerHTML=`
     ${adminBtns}
-    <button class="btn btn-blue" onclick="exportImage()">📷 تصدير الكل</button>
-    <button class="btn btn-outline" onclick="openExportPartial()" title="يصدر الشخص المبحوث + أبوه + أبناؤه">🖼️ تصدير جزئي</button>
+    <button class="btn btn-blue" onclick="openExportModal()">📤 تصدير</button>
+    <button class="btn btn-outline" onclick="window._userHasPanned=false;window._centerTree&&window._centerTree()" title="توسيط الشجرة">🎯</button>
+    <button class="btn btn-outline" id="treeModeBtn" onclick="toggleTreeMode()" title="تبديل طريقة العرض">${_treeMode==='collapsed'?'🌳 مفتوحة':'🌿 مطوية'}</button>
+    <button class="btn btn-outline" id="themeBtn" onclick="toggleTheme()" title="تبديل المظهر">🌙</button>
+    ${isAdmin?`<button class="btn btn-outline" onclick="openVisitors()" title="سجل الزوار">👁️</button>`:''}
+    <span style="font-size:13px;color:var(--text-dim);padding:0 6px">👥 <strong style="color:var(--gold)">${Object.keys(nodes).length}</strong> فرد</span>
   `;
+  const tb2=document.getElementById('themeBtn');
+  if(tb2) tb2.textContent=document.documentElement.classList.contains('light-theme')?'☀️':'🌙';
 }
 
 function drawNode(id){
@@ -531,60 +917,94 @@ function drawNode(id){
   const emoji=n.gender==='f'?'👩':'👨';
   const canEdit=isAdmin||isTempUser;
   const addBtn=canEdit?`<button class="node-btn node-btn-add" onclick="openAddChild('${id}')">+ ابن/بنت</button>`:'';
+  const addParentBtn=(canEdit&&!n.parentId)?`<button class="node-btn node-btn-parent" onclick="openAddParent('${id}')">+ أب</button>`:'';
   const editBtn=canEdit?`<button class="node-btn node-btn-edit" onclick="openEdit('${id}')">✏️</button>`:'';
   const delBtn =canEdit?`<button class="node-btn node-btn-del"  onclick="openDelete('${id}')">🗑️</button>`:'';
 
+  // أزرار التنقل بين الإخوة
+  let sibNavHTML='';
+  if(n.parentId){
+    const siblings=Object.values(nodes)
+      .filter(s=>s.parentId===n.parentId)
+      .sort((a,b)=>a.x-b.x);
+    const idx=siblings.findIndex(s=>s.id===id);
+    const DIST_THRESHOLD = NODE_W * 3;
+
+    const prevSib = idx>0 ? siblings[idx-1] : null;
+    const nextSib = idx<siblings.length-1 ? siblings[idx+1] : null;
+
+    const prevFar = prevSib && (n.x - prevSib.x) > DIST_THRESHOLD;
+    const nextFar = nextSib && (nextSib.x - n.x) > DIST_THRESHOLD;
+
+    const upBtn = `<button class="sibnav-btn sibnav-up" onclick="navToSibling('${n.parentId}')" title="الأب">↑</button>`;
+    const prevBtn = prevFar ? `<button class="sibnav-btn" onclick="navToSibling('${prevSib.id}')" title="الأخ السابق">◀</button>` : '';
+    const nextBtn = nextFar ? `<button class="sibnav-btn" onclick="navToSibling('${nextSib.id}')" title="الأخ التالي">▶</button>` : '';
+
+    sibNavHTML=`
+      <div class="sibling-nav nav-up">${upBtn}</div>
+      ${nextFar?`<div class="sibling-nav nav-right">${nextBtn}</div>`:''}
+      ${prevFar?`<div class="sibling-nav nav-left">${prevBtn}</div>`:''}`;
+  }
+
+  // زر +/− للوضع المطوي وزر ↓
+  const myChildren = Object.values(nodes).filter(c=>c.parentId===id).sort((a,b)=>a.x-b.x);
+  const hasKids = myChildren.length > 0;
+  const expandBtn = (_treeMode==='collapsed' && hasKids)
+    ? `<button class="node-expand-btn" onclick="toggleExpand('${id}')">${_expanded.has(id)?'−':'+'}</button>`
+    : '';
+  // زر ↓ فقط في وضع مفتوح
+  if(hasKids && _treeMode==='open'){
+    sibNavHTML += `<div class="sibling-nav nav-down"><button class="sibnav-btn sibnav-down" onclick="navDown('${id}')" title="الابن">↓</button></div>`;
+  }
+
   div.innerHTML=`
+    ${sibNavHTML}
     <div class="node-avatar">${emoji}</div>
     <div class="node-name">${n.name}</div>
     <div class="node-info">${n.birth?'📅 '+n.birth:''}${n.note?(n.birth?' · ':'')+n.note:''}</div>
-    <div class="node-actions">${addBtn}${editBtn}${delBtn}</div>`;
+    <div class="node-actions">${addParentBtn}${addBtn}${editBtn}${delBtn}</div>
+    ${expandBtn}`;
 
   canvas.appendChild(div);
+  attachLongPress(div, id);
 }
 
 function drawLines(){
   const svg=document.getElementById('lines');
-  svg.innerHTML='';
-  Object.values(nodes).forEach(n=>{
-    if(!n.parentId) return;
-    const p=nodes[n.parentId]; if(!p) return;
+  svg.innerHTML=''; // مسح كامل قبل إعادة الرسم
+  const vids=new Set(visibleNodes());
+  if(!vids.size) return;
 
+  Object.values(nodes).forEach(n=>{
+    if(!n.parentId||!vids.has(n.id)||!vids.has(n.parentId)) return;
+    const p=nodes[n.parentId]; if(!p) return;
     const px=p.x+NODE_W/2, py=p.y+NODE_H;
     const cx=n.x+NODE_W/2, cy=n.y;
     const mid=(py+cy)/2;
-
-    // Curve
     const path=document.createElementNS('http://www.w3.org/2000/svg','path');
     path.setAttribute('d',`M${px},${py} C${px},${mid} ${cx},${mid} ${cx},${cy}`);
-    path.setAttribute('stroke','#c9962a');
-    path.setAttribute('stroke-width','2');
-    path.setAttribute('fill','none');
-    path.setAttribute('stroke-linecap','round');
+    path.setAttribute('stroke','#c9962a'); path.setAttribute('stroke-width','2');
+    path.setAttribute('fill','none'); path.setAttribute('stroke-linecap','round');
     path.setAttribute('opacity','0.55');
     svg.appendChild(path);
-
-    // Arrow at child
     const arr=document.createElementNS('http://www.w3.org/2000/svg','polygon');
     arr.setAttribute('points',`${cx},${cy} ${cx-5},${cy-8} ${cx+5},${cy-8}`);
-    arr.setAttribute('fill','#c9962a');
-    arr.setAttribute('opacity','0.7');
+    arr.setAttribute('fill','#c9962a'); arr.setAttribute('opacity','0.7');
     svg.appendChild(arr);
   });
-
-  // Sibling connector: horizontal line between children of same parent
   const byParent={};
-  Object.values(nodes).forEach(n=>{ if(n.parentId)(byParent[n.parentId]=byParent[n.parentId]||[]).push(n); });
+  Object.values(nodes).forEach(n=>{
+    if(n.parentId && vids.has(n.id) && vids.has(n.parentId))
+      (byParent[n.parentId]=byParent[n.parentId]||[]).push(n);
+  });
   Object.values(byParent).forEach(siblings=>{
     if(siblings.length<2) return;
     const ys=siblings.map(s=>s.y);
-    const allSameRow=ys.every(y=>y===ys[0]);
-    if(!allSameRow) return;
+    if(!ys.every(y=>y===ys[0])) return;
     const xs=siblings.map(s=>s.x+NODE_W/2).sort((a,b)=>a-b);
-    const y=ys[0];
     const line=document.createElementNS('http://www.w3.org/2000/svg','line');
-    line.setAttribute('x1',xs[0]); line.setAttribute('y1',y-20);
-    line.setAttribute('x2',xs[xs.length-1]); line.setAttribute('y2',y-20);
+    line.setAttribute('x1',xs[0]); line.setAttribute('y1',ys[0]-20);
+    line.setAttribute('x2',xs[xs.length-1]); line.setAttribute('y2',ys[0]-20);
     line.setAttribute('stroke','#c9962a'); line.setAttribute('stroke-width','1.5');
     line.setAttribute('opacity','0.35');
     svg.appendChild(line);
@@ -615,6 +1035,15 @@ function openAddChild(parentId){
   document.getElementById('personModalTitle').textContent='إضافة ابن/بنت لـ '+nodes[parentId].name;
   openModal('personModal');
 }
+function openAddParent(childId){
+  if(!isAdmin&&!isTempUser) return;
+  // نحفظ الـ childId في editingParentId بشكل خاص
+  editingId=null; editingParentId=null; clearPF();
+  document.getElementById('personModalTitle').textContent='إضافة أب لـ '+nodes[childId].name;
+  // نخزن الـ childId مؤقتاً على الـ form
+  document.getElementById('personModal').dataset.addParentFor=childId;
+  openModal('personModal');
+}
 function openEdit(id){
   if(!isAdmin&&!isTempUser) return;
   editingId=id; editingParentId=null;
@@ -624,43 +1053,109 @@ function openEdit(id){
   document.getElementById('pBirth').value =n.birth||'';
   document.getElementById('pNote').value  =n.note ||'';
   document.getElementById('personModalTitle').textContent='تعديل: '+n.name;
+
+  // أظهر أزرار الترتيب إذا له إخوة
+  const reorderDiv=document.getElementById('reorderBtns');
+  if(n.parentId){
+    const siblings=Object.values(nodes).filter(s=>s.parentId===n.parentId).sort((a,b)=>(a.order||0)-(b.order||0));
+    const idx=siblings.findIndex(s=>s.id===id);
+    reorderDiv.style.display='block';
+    document.getElementById('reorderPos').textContent=`الترتيب الحالي: ${idx+1} من ${siblings.length}`;
+  } else {
+    reorderDiv.style.display='none';
+  }
   openModal('personModal');
 }
 function clearPF(){
   ['pName','pBirth','pNote'].forEach(i=>document.getElementById(i).value='');
   document.getElementById('pGender').value='m';
+  delete document.getElementById('personModal').dataset.addParentFor;
 }
 function savePerson(){
   const name=document.getElementById('pName').value.trim();
   if(!name){toast('⚠️ الاسم مطلوب');return;}
+
+  const modal=document.getElementById('personModal');
+  const addParentFor=modal.dataset.addParentFor||'';
+
   if(editingId){
     nodes[editingId].name  =name;
     nodes[editingId].gender=document.getElementById('pGender').value;
     nodes[editingId].birth =document.getElementById('pBirth').value;
     nodes[editingId].note  =document.getElementById('pNote').value.trim();
+  } else if(addParentFor && nodes[addParentFor]){
+    // أنشئ الأب الجديد بدون parentId (يصبح الجذر)
+    const newId='n'+(nextId++);
+    nodes[newId]={id:newId, name, gender:document.getElementById('pGender').value,
+      birth:document.getElementById('pBirth').value,
+      note:document.getElementById('pNote').value.trim(),
+      parentId:null, x:0, y:0};
+    // اربط الجذر القديم بالأب الجديد
+    nodes[addParentFor].parentId=newId;
+    delete modal.dataset.addParentFor;
   } else {
     const id='n'+(nextId++);
+    // order = آخر ترتيب بين الإخوة + 1
+    const sibOrder=Object.values(nodes).filter(n=>n.parentId===editingParentId).map(n=>n.order||0);
+    const newOrder=sibOrder.length ? Math.max(...sibOrder)+1 : 0;
     nodes[id]={id,name,gender:document.getElementById('pGender').value,
       birth:document.getElementById('pBirth').value,
       note:document.getElementById('pNote').value.trim(),
-      parentId:editingParentId,x:0,y:0};
+      parentId:editingParentId,x:0,y:0,order:newOrder};
   }
-  save(); closeModal('personModal'); render(); toast('✅ تم الحفظ');
+  save(); closeModal('personModal'); render();
+}
+function countSubtree(id){
+  // يحسب الشخص + كل ذريته
+  let count=1;
+  Object.values(nodes).forEach(n=>{ if(n.parentId===id) count+=countSubtree(n.id); });
+  return count;
 }
 function openDelete(id){
   if(!isAdmin&&!isTempUser) return;
-  deleteTargetId=id;
-  document.getElementById('deleteTargetName').textContent=nodes[id].name;
+  const n=nodes[id];
+  const hasChildren=Object.values(nodes).some(c=>c.parentId===id);
+  const total=countSubtree(id)-1; // عدد الأبناء والأحفاد بدون الشخص نفسه
+
+  const title=document.getElementById('deleteModalTitle');
+  const body=document.getElementById('deleteModalBody');
+  const btn=document.getElementById('deleteConfirmBtn');
+
+  if(hasChildren){
+    // ❌ منع الحذف
+    title.textContent='🚫 لا يمكن الحذف';
+    body.innerHTML=`
+      <p style="color:#e74c3c;font-size:14px;font-weight:700;margin-bottom:8px">
+        لا يمكن حذف <strong style="color:var(--gold)">${n.name}</strong>
+      </p>
+      <p style="color:var(--text-dim);font-size:12px;line-height:1.8">
+        هذا الشخص له <strong style="color:#e8c84a">${total} فرد</strong> من الأبناء والأحفاد مرتبطين به.<br>
+        احذف أبناءه أولاً إن أردت حذفه.
+      </p>`;
+    btn.style.display='none';
+  } else {
+    // ✅ السماح بالحذف (ورقة فقط، لا أبناء)
+    title.textContent='⚠️ تأكيد الحذف';
+    body.innerHTML=`
+      <p style="color:var(--text-dim);font-size:13px;line-height:1.8">
+        هل تريد حذف<br>
+        <strong style="color:var(--gold);font-size:15px">${n.name}</strong>؟<br>
+        <span style="font-size:11px;color:#8a7a62">هذا الشخص ليس له أبناء، سيُحذف فقط.</span>
+      </p>`;
+    btn.style.display='';
+    deleteTargetId=id;
+  }
   openModal('deleteModal');
 }
 function confirmDelete(){
   if(!deleteTargetId) return;
-  deleteSubtree(deleteTargetId);
+  // تحقق أخير — منع حذف من له أبناء
+  if(Object.values(nodes).some(c=>c.parentId===deleteTargetId)){
+    toast('🚫 لا يمكن حذف شخص له أبناء'); closeModal('deleteModal'); return;
+  }
+  delete nodes[deleteTargetId];
+  deleteTargetId=null;
   save(); closeModal('deleteModal'); render(); toast('🗑️ تم الحذف');
-}
-function deleteSubtree(id){
-  Object.keys(nodes).forEach(k=>{ if(nodes[k].parentId===id) deleteSubtree(k); });
-  delete nodes[id];
 }
 
 // ══════════════════════════════════════════════════
@@ -668,19 +1163,27 @@ function deleteSubtree(id){
 // ══════════════════════════════════════════════════
 function openAdminLogin(){ openModal('adminModal'); }
 
-function doAdminLogin(){
+async function doAdminLogin(){
   const pw=document.getElementById('adminPass').value.trim();
+  const mk=document.getElementById('adminMasterKey').value.trim();
   document.getElementById('adminPass').value='';
+  document.getElementById('adminMasterKey').value='';
 
-  if(pw===adminPass){
+  const hashBuffer=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(pw));
+  const hashHex=Array.from(new Uint8Array(hashBuffer)).map(b=>b.toString(16).padStart(2,"0")).join("");
+
+  if(hashHex===adminPass){
     isAdmin=true; isTempUser=false;
-    closeModal('adminModal'); updateAdminUI(); toast('✅ مرحباً بك أيها المدير');
+    if(mk) binMasterKey=mk; // خزّن المفتاح في الذاكرة فقط
+    closeModal('adminModal'); updateAdminUI();
+    toast(mk?'✅ مرحباً بك أيها المدير — صلاحية كاملة':'✅ مرحباً بك أيها المدير — عرض فقط');
     return;
   }
   const now=Date.now();
   const m=tempPasswords.find(tp=>tp.pass===pw&&(tp.expiry===0||tp.expiry>now));
   if(m){
     isAdmin=false; isTempUser=true;
+    if(mk) binMasterKey=mk;
     closeModal('adminModal'); updateAdminUI(m.label);
     toast('✅ مرحباً '+m.label);
     return;
@@ -690,8 +1193,10 @@ function doAdminLogin(){
 
 function updateAdminUI(tempLabel){
   const ha=document.getElementById('headerActions');
+  const helpBtn=`<button class="btn btn-outline" onclick="openModal('helpModal')" title="إرشادات الاستخدام">❓ مساعدة</button>`;
   if(isAdmin){
     ha.innerHTML=`
+      ${helpBtn}
       <span class="admin-badge">👑 مدير</span>
       <button class="btn btn-outline" onclick="openModal('tempPwModal');renderTempTable()">🗝️ مؤقتة</button>
       <button class="btn btn-outline" onclick="openModal('changePwModal')">🔒 كلمة المرور</button>
@@ -699,24 +1204,29 @@ function updateAdminUI(tempLabel){
       <button class="btn btn-danger" onclick="adminLogout()">خروج</button>`;
   } else if(isTempUser){
     ha.innerHTML=`
+      ${helpBtn}
       <span class="temp-badge">🗝️ ${tempLabel||'مؤقت'}</span>
       <button class="btn btn-danger" onclick="adminLogout()">خروج</button>`;
   } else {
-    ha.innerHTML=`<button class="btn btn-outline" onclick="openAdminLogin()">🔑 دخول المدير</button>`;
+    ha.innerHTML=`${helpBtn}<button class="btn btn-outline" onclick="openAdminLogin()">🔑 دخول المدير</button>`;
   }
   render();
 }
 
 function adminLogout(){ isAdmin=false; isTempUser=false; updateAdminUI(); toast('👋 تم الخروج'); }
 
-function doChangePw(){
+async function doChangePw(){
   const o=document.getElementById('oldPw').value;
   const n=document.getElementById('newPw').value;
   const n2=document.getElementById('newPw2').value;
-  if(o!==adminPass){toast('❌ الحالية خاطئة');return;}
+  // تحقق من القديمة بالـ hash
+  const oldHash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(o)))).map(b=>b.toString(16).padStart(2,'0')).join('');
+  if(oldHash!==adminPass){toast('❌ الحالية خاطئة');return;}
   if(!n){toast('⚠️ أدخل كلمة جديدة');return;}
   if(n!==n2){toast('⚠️ لا تتطابقان');return;}
-  adminPass=n;
+  // خزّن الـ hash الجديد
+  const newHash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(n)))).map(b=>b.toString(16).padStart(2,'0')).join('');
+  adminPass=newHash;
   closeModal('changePwModal');
   ['oldPw','newPw','newPw2'].forEach(i=>document.getElementById(i).value='');
   toast('✅ تم تغيير كلمة المرور');
@@ -725,13 +1235,15 @@ function doChangePw(){
 // ══════════════════════════════════════════════════
 //  TEMP PASSWORDS
 // ══════════════════════════════════════════════════
-function addTempPass(){
+async function addTempPass(){
   const label=document.getElementById('tpLabel').value.trim();
   const pass =document.getElementById('tpPass').value.trim();
   const days =parseInt(document.getElementById('tpExpiry').value);
   if(!label){toast('⚠️ أدخل اسماً');return;}
   if(!pass) {toast('⚠️ أدخل كلمة المرور');return;}
-  if(pass===adminPass){toast('⚠️ لا يمكن استخدام كلمة المدير');return;}
+  // قارن بالـ hash لمنع استخدام كلمة المدير
+  const h=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(pass)))).map(b=>b.toString(16).padStart(2,'0')).join('');
+  if(h===adminPass){toast('⚠️ لا يمكن استخدام كلمة المدير');return;}
   const expiry=days===0?0:Date.now()+days*86400000;
   tempPasswords.push({id:Date.now().toString(),label,pass,expiry});
   saveTempPasswords(); renderTempTable();
@@ -764,43 +1276,9 @@ function renderTempTable(){
 }
 
 // ══════════════════════════════════════════════════
-//  EXPORT IMAGE  (html2canvas — high resolution)
+//  EXPORT IMAGE  — تحويل للمودال الجديد
 // ══════════════════════════════════════════════════
-async function exportImage(){
-  const ov=document.getElementById('exportOverlay');
-  ov.classList.add('show');
-
-  // Temporarily hide action buttons inside nodes
-  const btns=document.querySelectorAll('.node-actions');
-  btns.forEach(b=>b.style.display='none');
-
-  const canvas=document.getElementById('tree-canvas');
-  const scale=2; // 2× for high DPI
-
-  try{
-    const c=await html2canvas(canvas,{
-      scale,
-      backgroundColor:'#0f0e0c',
-      useCORS:true,
-      logging:false,
-      width:canvas.scrollWidth,
-      height:canvas.scrollHeight,
-      windowWidth:canvas.scrollWidth,
-      windowHeight:canvas.scrollHeight
-    });
-    const link=document.createElement('a');
-    link.download='family-tree.png';
-    link.href=c.toDataURL('image/png');
-    link.click();
-    toast('✅ تم تصدير الصورة بجودة عالية');
-  }catch(e){
-    toast('❌ فشل التصدير');
-    console.error(e);
-  }
-
-  btns.forEach(b=>b.style.display='');
-  ov.classList.remove('show');
-}
+async function exportImage(){ openExportModal(); }
 
 // ══════════════════════════════════════════════════
 //  TOAST
@@ -920,25 +1398,234 @@ function focusNode(id){
   const n=nodes[id];
   if(!n) return;
 
-  // تضيء العقدة
-  const nodeEl=document.getElementById('node-'+id);
-  if(nodeEl) nodeEl.classList.add('search-highlight');
-
-  // إطار مرئي حول العقدة
-  const frame=document.getElementById('focusFrame');
-  frame.style.display='block';
-  frame.style.left=(n.x-8)+'px';
-  frame.style.top =(n.y-8)+'px';
-  frame.style.width=(NODE_W+16)+'px';
-  frame.style.height=(NODE_H+16)+'px';
-  setTimeout(()=>{ if(frame) frame.style.display='none'; },3500);
-
-  // Scroll: استخدم scrollIntoView على العقدة مباشرة ثم صحّح للتوسيط
-  if(nodeEl){
-    setTimeout(()=>{
-      nodeEl.scrollIntoView({behavior:'smooth', block:'center', inline:'center'});
-    }, 50);
+  // في الوضع المطوي: افتح كل الأجداد حتى الجذر أولاً
+  if(_treeMode==='collapsed'){
+    let cur=n.parentId;
+    while(cur&&nodes[cur]){
+      _expanded.add(cur);
+      cur=nodes[cur].parentId;
+    }
+    render(); // أعد الرسم لإظهار الشخص
   }
+
+  // تضيء العقدة
+  setTimeout(()=>{
+    const nodeEl=document.getElementById('node-'+id);
+    if(nodeEl) nodeEl.classList.add('search-highlight');
+
+    // إطار مرئي حول العقدة
+    const frame=document.getElementById('focusFrame');
+    frame.style.display='block';
+    frame.style.left=(n.x-8)+'px';
+    frame.style.top =(n.y-8)+'px';
+    frame.style.width=(NODE_W+16)+'px';
+    frame.style.height=(NODE_H+16)+'px';
+    setTimeout(()=>{ if(frame) frame.style.display='none'; },3500);
+
+    // تحريك الـ pan نحو العقدة
+    const wrap=document.getElementById('canvas-wrap');
+    if(!wrap) return;
+    const ww=wrap.offsetWidth, wh=wrap.offsetHeight;
+    window._panTo(n.x+NODE_W/2, n.y+NODE_H/2, ww, wh);
+  }, _treeMode==='collapsed' ? 150 : 0);
+}
+
+function reorderNode(dir){
+  const id=editingId; if(!id||!nodes[id]||!nodes[id].parentId) return;
+  const n=nodes[id];
+  const siblings=Object.values(nodes)
+    .filter(s=>s.parentId===n.parentId)
+    .sort((a,b)=>(a.order??0)-(b.order??0));
+  const idx=siblings.findIndex(s=>s.id===id);
+
+  const swapIdx = dir==='left' ? idx-1 : idx+1;
+  if(swapIdx<0||swapIdx>=siblings.length){ toast('⚠️ لا يمكن التحريك'); return; }
+
+  // تبادل الـ order بشكل صحيح
+  const other=siblings[swapIdx];
+  const tmpOrder = n.order??idx;
+  n.order = other.order??swapIdx;
+  other.order = tmpOrder;
+
+  // تطبيع 0,1,2,3...
+  siblings.sort((a,b)=>(a.order??0)-(b.order??0));
+  siblings.forEach((s,i)=>{ nodes[s.id].order=i; });
+
+  const newIdx=siblings.findIndex(s=>s.id===id);
+  document.getElementById('reorderPos').textContent=`الترتيب الحالي: ${newIdx+1} من ${siblings.length}`;
+  save(); render();
+  toast(`✅ ${dir==='left'?'تم التقديم':'تم التأخير'}`);
+}
+
+function initOrders(){
+  // أضف order فقط للأشخاص الذين ليس لهم order بعد — لا نمس من لديه order
+  let changed=false;
+  const byParent={};
+  Object.values(nodes).forEach(n=>{
+    if(!n.parentId) return;
+    (byParent[n.parentId]=byParent[n.parentId]||[]).push(n);
+  });
+  Object.values(byParent).forEach(siblings=>{
+    // الأشخاص الذين لديهم order بالفعل
+    const maxExisting = siblings
+      .filter(s=>s.order!==undefined&&s.order!==null)
+      .reduce((m,s)=>Math.max(m,s.order),-1);
+    let next=maxExisting+1;
+    // رتب من ليس لديه order حسب رقم id فقط
+    siblings
+      .filter(s=>s.order===undefined||s.order===null)
+      .sort((a,b)=>parseInt(a.id.replace('n',''))-parseInt(b.id.replace('n','')))
+      .forEach(s=>{ s.order=next++; changed=true; });
+  });
+  if(changed) save();
+  // لا نستدعي render() لتجنب أي تأثير جانبي
+}
+
+function navDown(parentId){
+  const children = Object.values(nodes)
+    .filter(c=>c.parentId===parentId)
+    .sort((a,b)=>a.x-b.x);
+  if(!children.length) return;
+
+  // هل يوجد شخص محدد في البحث؟
+  const searchVal = document.getElementById('searchInput').value.trim();
+  let targetId = null;
+
+  if(searchVal && _lastFocusedId && nodes[_lastFocusedId]){
+    const focused = nodes[_lastFocusedId];
+    // هل الشخص المبحوث ابن مباشر لهذا الأب؟
+    if(focused.parentId === parentId){
+      targetId = focused.id; // انزل للشخص المبحوث
+    }
+    // إذا لا → تجاهل البحث وانزل للابن الأول
+  }
+
+  if(!targetId) targetId = children[0].id;
+  navToSibling(targetId);
+}
+
+function navToSibling(id){
+  const n=nodes[id]; if(!n) return;
+  _lastFocusedId=id;
+  // انتقل للعقدة
+  const wrap=document.getElementById('canvas-wrap');
+  if(!wrap) return;
+  const ww=wrap.clientWidth||window.innerWidth;
+  const wh=wrap.clientHeight||(window.innerHeight-150);
+  window._panTo(n.x+NODE_W/2, n.y+NODE_H/2, ww, wh);
+  // هايلايت مؤقت
+  document.querySelectorAll('.node').forEach(el=>el.classList.remove('search-highlight'));
+  const el=document.getElementById('node-'+id);
+  if(el){ el.classList.add('search-highlight'); setTimeout(()=>el.classList.remove('search-highlight'),1500); }
+}
+
+// ══════════════════════════════════════════════════
+//  VISITORS TRACKING
+// ══════════════════════════════════════════════════
+const VISITORS_KEY='ftree_visitors';
+
+async function recordVisit(){
+  try{
+    let info={ip:'—',country:'—',city:'—',org:'—'};
+    try{
+      const r=await fetch('https://ipapi.co/json/');
+      if(r.ok){const d=await r.json();info={ip:d.ip||'—',country:d.country_name||'—',city:d.city||'—',org:d.org||'—'};}
+    }catch(_){}
+    const visit={
+      time:new Date().toISOString(),
+      ip:info.ip, country:info.country, city:info.city, org:info.org,
+      device:/Mobile|Android|iPhone/i.test(navigator.userAgent)?'📱 موبايل':'💻 كمبيوتر',
+      browser:getBrowser()
+    };
+    // احفظ محلياً
+    const visits=JSON.parse(localStorage.getItem(VISITORS_KEY)||'[]');
+    visits.unshift(visit);
+    if(visits.length>200) visits.splice(200);
+    localStorage.setItem(VISITORS_KEY,JSON.stringify(visits));
+    // احفظ في bin الزوار المنفصل
+    if(binMasterKey&&binVisitorsId){
+      try{
+        const r2=await fetch(`${BIN_BASE}/${binVisitorsId}/latest`,{headers:{'X-Master-Key':binMasterKey}});
+        const rec=(r2.ok?(await r2.json()).record:null)||{visits:[]};
+        rec.visits=rec.visits||[];
+        rec.visits.unshift(visit);
+        if(rec.visits.length>500) rec.visits.splice(500);
+        await fetch(`${BIN_BASE}/${binVisitorsId}`,{method:'PUT',
+          headers:{'Content-Type':'application/json','X-Master-Key':binMasterKey},
+          body:JSON.stringify(rec)});
+      }catch(_){}
+    }
+  }catch(_){}
+}
+
+function getBrowser(){
+  const ua=navigator.userAgent;
+  if(ua.includes('Chrome')&&!ua.includes('Edg')) return 'Chrome';
+  if(ua.includes('Firefox')) return 'Firefox';
+  if(ua.includes('Safari')&&!ua.includes('Chrome')) return 'Safari';
+  if(ua.includes('Edg')) return 'Edge';
+  return 'متصفح آخر';
+}
+
+async function openVisitors(){
+  const el=document.getElementById('visitorsList');
+  const stats=document.getElementById('visitorsStats');
+  el.innerHTML='<div style="color:var(--text-dim);text-align:center;padding:20px">⏳ جاري التحميل...</div>';
+  openModal('visitorsModal');
+  let visits=[];
+  if(binMasterKey&&binVisitorsId){
+    try{
+      const r=await fetch(`${BIN_BASE}/${binVisitorsId}/latest`,{headers:{'X-Master-Key':binMasterKey}});
+      if(r.ok){const j=await r.json();visits=(j.record||{}).visits||[];}
+    }catch(_){}
+  }
+  if(!visits.length) visits=JSON.parse(localStorage.getItem(VISITORS_KEY)||'[]');
+  if(!visits.length){
+    el.innerHTML='<div style="color:var(--text-dim);text-align:center;padding:30px">لا توجد زيارات مسجلة بعد</div>';
+    stats.innerHTML=''; return;
+  }
+  const countries=[...new Set(visits.map(v=>v.country))];
+  const today=visits.filter(v=>new Date(v.time).toDateString()===new Date().toDateString()).length;
+  stats.innerHTML=`
+    <div class="visitor-stat"><div class="vs-num">${visits.length}</div><div class="vs-lbl">إجمالي</div></div>
+    <div class="visitor-stat"><div class="vs-num">${today}</div><div class="vs-lbl">اليوم</div></div>
+    <div class="visitor-stat"><div class="vs-num">${countries.length}</div><div class="vs-lbl">دولة</div></div>
+    <div class="visitor-stat"><div class="vs-num">${visits.filter(v=>v.device&&v.device.includes('موبايل')).length}</div><div class="vs-lbl">📱</div></div>`;
+  el.innerHTML=visits.map(v=>{
+    const d=new Date(v.time);
+    const ds=d.toLocaleDateString('ar-SA',{year:'numeric',month:'short',day:'numeric'});
+    const ts=d.toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});
+    return `<div class="visitor-card">
+      <div class="vc-time">🕐 ${ds} — ${ts}</div>
+      <div class="vc-info">🌍 ${v.country||'—'} — ${v.city||'—'}<br>🔌 ${v.ip||'—'}<br>${v.org?`🏢 ${v.org}<br>`:''} ${v.device||''} · ${v.browser||''}</div>
+    </div>`;
+  }).join('');
+}
+
+async function clearVisitors(){
+  if(!confirm('هل تريد مسح سجل الزوار كاملاً؟')) return;
+  localStorage.removeItem(VISITORS_KEY);
+  if(binMasterKey&&binVisitorsId){
+    try{
+      await fetch(`${BIN_BASE}/${binVisitorsId}`,{method:'PUT',
+        headers:{'Content-Type':'application/json','X-Master-Key':binMasterKey},
+        body:JSON.stringify({visits:[]})});
+    }catch(_){}
+  }
+  closeModal('visitorsModal'); toast('✅ تم مسح السجل');
+}
+
+function toggleTheme(){
+  const isLight=document.documentElement.classList.toggle('light-theme');
+  localStorage.setItem('theme', isLight?'light':'dark');
+  const btn=document.getElementById('themeBtn');
+  if(btn) btn.textContent=isLight?'☀️':'🌙';
+}
+
+if(localStorage.getItem('theme')==='dark'){
+  // الداكن محفوظ صراحةً فقط
+} else {
+  document.documentElement.classList.add('light-theme');
 }
 
 function clearHighlight(){
@@ -962,217 +1649,572 @@ document.addEventListener('click',e=>{
 });
 
 // ══════════════════════════════════════════════════
-//  EXPORT PARTIAL (شخص + أبوه + أبناؤه)
+//  EXPORT ENGINE — رسم من البيانات مباشرة
 // ══════════════════════════════════════════════════
-function openExportPartial(){
-  if(!_lastFocusedId || !nodes[_lastFocusedId]){
-    toast('🔍 اضغط على اسم شخص في نتائج البحث أولاً');
-    return;
+let _exportFmt = 'png';
+let _exportScope = 'all';
+
+function openExportModal(){
+  const hasTarget=_lastFocusedId&&nodes[_lastFocusedId];
+  const partialBtns=document.querySelectorAll('#partialScopeBtns .export-scope-btn');
+  partialBtns.forEach(b=>b.classList.toggle('disabled',!hasTarget));
+
+  // اسم الشخص المحدد
+  document.getElementById('partialName').textContent=
+    hasTarget ? nodes[_lastFocusedId].name : '— لم يُحدد شخص بعد';
+
+  // إذا لا يوجد شخص محدد، ارجع لـ "كل الشجرة"
+  if(!hasTarget && _exportScope!=='all') setExportScope('all');
+
+  // JSON الاحتياطي متاح فقط للمدير الكامل (وليس حتى المستخدم المؤقت)
+  const jsonCard=document.getElementById('jsonExportCard');
+  if(jsonCard){
+    jsonCard.style.display = isAdmin ? '' : 'none';
+    if(!isAdmin && _exportFmt==='json'){
+      _exportFmt='png';
+      document.querySelectorAll('.export-card').forEach(c=>c.classList.remove('selected'));
+      const pngCard=document.querySelector('.export-card[data-fmt="png"]');
+      if(pngCard) pngCard.classList.add('selected');
+    }
   }
-  exportPartial(_lastFocusedId);
+
+  document.getElementById('exportPreviewWrap').innerHTML=
+    '<span style="color:var(--text-dim);font-size:12px">اضغط "معاينة" لرؤية الشجرة قبل الحفظ</span>';
+  openModal('exportModal');
 }
 
-async function exportPartial(id){
-  const n=nodes[id];
-  if(!n){ toast('❌ الشخص غير موجود'); return; }
+const SCOPE_IDS=['scopeAll','scopeAncestorsChildren','scopeDescendants','scopeFamily','scopeFamilyDeep'];
 
-  const ov=document.getElementById('exportOverlay');
-  ov.querySelector('p').textContent='⏳ جاري تصدير '+n.name+'...';
-  ov.classList.add('show');
+function setExportScope(s){
+  _exportScope=s;
+  // أزل active من الكل
+  SCOPE_IDS.forEach(sid=>{
+    const el=document.getElementById(sid);
+    if(el) el.classList.remove('active');
+  });
+  // فعّل المحدد
+  const map={
+    all:'scopeAll',
+    ancestorsChildren:'scopeAncestorsChildren',
+    descendants:'scopeDescendants',
+    family:'scopeFamily',
+    familyDeep:'scopeFamilyDeep'
+  };
+  const target=document.getElementById(map[s]);
+  if(target) target.classList.add('active');
+}
 
-  // بناء السلسلة: من أكبر جد وصولاً للشخص
-  const ancestry=[]; // [جد_أعلى, ..., أب, الشخص]
-  let cur=id;
-  while(cur){
-    ancestry.unshift(cur);
-    cur=nodes[cur].parentId;
+/* ── جمع العقد حسب النطاق المحدد ── */
+function getExportNodes(){
+  const allNodes=Object.values(nodes);
+  if(_exportScope==='all') return allNodes;
+
+  const id=_lastFocusedId;
+  if(!id||!nodes[id]) return allNodes;
+
+  const included=new Set();
+
+  /* مساعد: أضف سلسلة الأجداد كاملة حتى الجذر */
+  function addAncestors(nodeId){
+    let cur=nodeId;
+    while(cur){ included.add(cur); cur=nodes[cur]?.parentId; }
   }
 
-  // جمع أبناء الشخص
-  const children = Object.values(nodes).filter(c=>c.parentId===id);
+  /* مساعد: أضف كل الذرية (أبناء + أحفاد + ...) */
+  function addDescendants(nodeId){
+    included.add(nodeId);
+    allNodes.filter(n=>n.parentId===nodeId).forEach(c=>addDescendants(c.id));
+  }
 
-  // ترتيب الشجرة العمودية
-  const NW=140, NH=70;
-  const pad=60;
-  const vGap=100; // بين الطبقات
-  const hGap=50; // بين الأخوة
+  /* مساعد: أضف أبناء مباشرين فقط */
+  function addChildren(nodeId){
+    allNodes.filter(n=>n.parentId===nodeId).forEach(c=>included.add(c.id));
+  }
 
-  // حساب الحجم
-  const levels=ancestry.length+1; // أسلافه + الأبناء
-  const maxWidth=Math.max(ancestry.length, children.length);
-  const w=Math.max(maxWidth,1)*NW + (maxWidth+2)*hGap;
-  const h=levels*NH + (levels+1)*vGap + 2*pad;
+  if(_exportScope==='ancestorsChildren'){
+    // الشخص + كل أجداده حتى الجذر + أبناؤه المباشرون
+    addAncestors(id);
+    addChildren(id);
+  }
+  else if(_exportScope==='descendants'){
+    // الشخص + كل ذريته حتى آخر الشجرة
+    addDescendants(id);
+  }
+  else if(_exportScope==='family'){
+    // الشخص + أبوه + إخوانه (أبناء الأب) + أبناء الشخص
+    included.add(id);
+    const parentId=nodes[id].parentId;
+    if(parentId){
+      included.add(parentId);
+      allNodes.filter(n=>n.parentId===parentId).forEach(n=>included.add(n.id)); // الإخوان
+    }
+    addChildren(id); // أبناء الشخص
+  }
+  else if(_exportScope==='familyDeep'){
+    // الشخص + أبوه + إخوانه + أبناء الشخص + أبناء الإخوان
+    included.add(id);
+    const parentId=nodes[id].parentId;
+    if(parentId){
+      included.add(parentId);
+      const siblings=allNodes.filter(n=>n.parentId===parentId);
+      siblings.forEach(n=>{
+        included.add(n.id);
+        addChildren(n.id); // أبناء كل أخ
+      });
+    }
+    addChildren(id);
+  }
 
-  const canvas=document.createElement('canvas');
-  canvas.width=w*2; canvas.height=h*2;
-  const ctx=canvas.getContext('2d');
-  ctx.scale(2,2);
+  return [...included].map(i=>nodes[i]).filter(Boolean);
+}
+
+function selectFmt(el,fmt){
+  document.querySelectorAll('.export-card').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+  _exportFmt=fmt;
+  const qr=document.querySelector('.export-quality-row');
+  const disabled=fmt==='svg'||fmt==='json';
+  qr.style.opacity=disabled?'.4':'1';
+  qr.style.pointerEvents=disabled?'none':'';
+}
+
+function buildTreeCanvas(exportNodes,scale,bgMode){
+  const NW=180,NH=90,HGAP=55,VGAP=100;
+  const nodeMap={};
+  exportNodes.forEach(n=>{ nodeMap[n.id]={...n}; });
+
+  function spanOf(id){
+    const kids=exportNodes.filter(n=>n.parentId===id&&nodeMap[n.id]);
+    if(!kids.length) return 1;
+    return kids.reduce((s,k)=>s+spanOf(k.id),0);
+  }
+  function placeNode(id,depth,colStart){
+    const kids=exportNodes.filter(n=>n.parentId===id&&nodeMap[n.id]);
+    if(!kids.length){ nodeMap[id].ex=colStart*(NW+HGAP)+60; nodeMap[id].ey=depth*(NH+VGAP)+60; return; }
+    let cur=colStart;
+    kids.forEach(k=>{ placeNode(k.id,depth+1,cur); cur+=spanOf(k.id); });
+    nodeMap[id].ex=(nodeMap[kids[0].id].ex+nodeMap[kids[kids.length-1].id].ex)/2;
+    nodeMap[id].ey=depth*(NH+VGAP)+60;
+  }
+  const roots=exportNodes.filter(n=>!n.parentId||!nodeMap[n.parentId]);
+  let col=0; roots.forEach(r=>{ placeNode(r.id,0,col); col+=spanOf(r.id); });
+
+  let maxX=0,maxY=0;
+  exportNodes.forEach(n=>{ maxX=Math.max(maxX,(nodeMap[n.id].ex||0)+NW+60); maxY=Math.max(maxY,(nodeMap[n.id].ey||0)+NH+60); });
+  maxX=Math.max(maxX,400); maxY=Math.max(maxY,300);
+
+  const c=document.createElement('canvas');
+  c.width=maxX*scale; c.height=maxY*scale;
+  const ctx=c.getContext('2d');
+  ctx.scale(scale,scale);
 
   // خلفية
-  ctx.fillStyle='#0f0e0c';
-  ctx.fillRect(0,0,w,h);
+  if(bgMode==='transparent'){ ctx.clearRect(0,0,maxX,maxY); }
+  else if(bgMode==='light'){ ctx.fillStyle='#f5f0e8'; ctx.fillRect(0,0,maxX,maxY); }
+  else {
+    const g=ctx.createRadialGradient(maxX/2,0,0,maxX/2,maxY/2,Math.max(maxX,maxY));
+    g.addColorStop(0,'#1a1510'); g.addColorStop(1,'#0f0e0c');
+    ctx.fillStyle=g; ctx.fillRect(0,0,maxX,maxY);
+  }
 
-  // دالة رسم عقدة
-  const drawNode=(name,x,y,isTarget)=>{
-    const R=8;
+  const isDark=bgMode!=='light';
+  const lc=isDark?'rgba(201,150,42,0.55)':'rgba(139,90,15,0.5)';
+
+  // خطوط
+  ctx.strokeStyle=lc; ctx.lineWidth=1.8; ctx.lineCap='round';
+  exportNodes.forEach(n=>{
+    if(!n.parentId||!nodeMap[n.parentId]) return;
+    const p=nodeMap[n.parentId],c2=nodeMap[n.id];
+    const px=p.ex+NW/2,py=p.ey+NH,cx2=c2.ex+NW/2,cy2=c2.ey,mid=(py+cy2)/2;
+    ctx.beginPath(); ctx.moveTo(px,py); ctx.bezierCurveTo(px,mid,cx2,mid,cx2,cy2); ctx.stroke();
+    ctx.fillStyle=lc; ctx.beginPath(); ctx.moveTo(cx2,cy2); ctx.lineTo(cx2-5,cy2-9); ctx.lineTo(cx2+5,cy2-9); ctx.closePath(); ctx.fill();
+  });
+
+  // خطوط الإخوة
+  const byP={};
+  exportNodes.forEach(n=>{ if(n.parentId&&nodeMap[n.parentId])(byP[n.parentId]=byP[n.parentId]||[]).push(n); });
+  Object.values(byP).forEach(siblings=>{
+    if(siblings.length<2) return;
+    const ys=siblings.map(s=>nodeMap[s.id].ey);
+    if(!ys.every(y=>y===ys[0])) return;
+    const xs=siblings.map(s=>nodeMap[s.id].ex+NW/2).sort((a,b)=>a-b);
+    ctx.strokeStyle='rgba(201,150,42,0.25)'; ctx.lineWidth=1.2;
+    ctx.beginPath(); ctx.moveTo(xs[0],ys[0]-18); ctx.lineTo(xs[xs.length-1],ys[0]-18); ctx.stroke();
+  });
+
+  // عقد
+  exportNodes.forEach(n=>{
+    const nm=nodeMap[n.id]; const x=nm.ex,y=nm.ey;
+    const isRoot=!n.parentId||!nodeMap[n.parentId];
+    const isTarget=n.id===_lastFocusedId&&_exportScope==='partial';
+    const R=10;
+    ctx.shadowColor='rgba(0,0,0,0.35)'; ctx.shadowBlur=12; ctx.shadowOffsetY=4;
+    const grd=ctx.createLinearGradient(x,y,x,y+NH);
+    if(isRoot||isTarget){ grd.addColorStop(0,isDark?'#2a1f00':'#fff8e1'); grd.addColorStop(1,isDark?'#1a1200':'#fef3c7'); }
+    else { grd.addColorStop(0,isDark?'#1c1a15':'#fffdf7'); grd.addColorStop(1,isDark?'#141210':'#f5f0e8'); }
     ctx.beginPath();
-    ctx.moveTo(x+R,y); ctx.lineTo(x+NW-R,y);
-    ctx.arcTo(x+NW,y,x+NW,y+R,R);
-    ctx.lineTo(x+NW,y+NH-R);
-    ctx.arcTo(x+NW,y+NH,x+NW-R,y+NH,R);
-    ctx.lineTo(x+R,y+NH);
-    ctx.arcTo(x,y+NH,x,y+NH-R,R);
-    ctx.lineTo(x,y+R);
-    ctx.arcTo(x,y,x+R,y,R);
-    ctx.closePath();
+    ctx.moveTo(x+R,y); ctx.lineTo(x+NW-R,y); ctx.arcTo(x+NW,y,x+NW,y+R,R);
+    ctx.lineTo(x+NW,y+NH-R); ctx.arcTo(x+NW,y+NH,x+NW-R,y+NH,R);
+    ctx.lineTo(x+R,y+NH); ctx.arcTo(x,y+NH,x,y+NH-R,R);
+    ctx.lineTo(x,y+R); ctx.arcTo(x,y,x+R,y,R); ctx.closePath();
+    ctx.fillStyle=grd; ctx.fill();
+    ctx.shadowColor='transparent'; ctx.shadowBlur=0; ctx.shadowOffsetY=0;
+    ctx.strokeStyle=(isRoot||isTarget)?'#c9962a':(isDark?'#2e2820':'#d4b56a');
+    ctx.lineWidth=(isRoot||isTarget)?2:1.2; ctx.stroke();
 
-    const grad=ctx.createLinearGradient(x,y,x,y+NH);
-    grad.addColorStop(0,isTarget?'#2a1f00':'#1c1a15');
-    grad.addColorStop(1,isTarget?'#1a1200':'#141210');
-    ctx.fillStyle=grad; ctx.fill();
-    ctx.strokeStyle=isTarget?'#c9962a':'#3a3020';
-    ctx.lineWidth=isTarget?2:1;
-    ctx.stroke();
+    ctx.font='18px serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(n.gender==='f'?'👩':'👨',x+NW/2,y+18);
 
-    ctx.fillStyle=isTarget?'#e8c84a':'#c9962a';
-    ctx.font=`${isTarget?'bold 13px':'12px'} Tajawal, Arial`;
+    ctx.fillStyle=(isRoot||isTarget)?(isDark?'#e8c84a':'#8a5c0a'):(isDark?'#e8dcc8':'#1a1208');
     ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.direction='rtl';
-    const words=name.split(' ');
-    if(words.length<=2){
-      ctx.fillText(name,x+NW/2,y+NH/2);
-    }else{
-      ctx.fillText(words.slice(0,2).join(' '),x+NW/2,y+NH/2-8);
-      ctx.font=`${isTarget?'11px':'10px'} Tajawal, Arial`;
-      ctx.fillText(words.slice(2).join(' '),x+NW/2,y+NH/2+8);
+    const words=n.name.split(' ');
+    if(words.length<=3){ ctx.font=`bold ${isRoot?15:13}px Tajawal,Arial`; ctx.fillText(n.name,x+NW/2,y+44); }
+    else {
+      ctx.font='bold 12px Tajawal,Arial'; ctx.fillText(words.slice(0,3).join(' '),x+NW/2,y+40);
+      ctx.font='11px Tajawal,Arial'; ctx.fillStyle=isDark?'#8a7a62':'#6a5a42';
+      ctx.fillText(words.slice(3).join(' '),x+NW/2,y+56);
     }
+    if(n.birth){
+      ctx.font='10px Tajawal,Arial'; ctx.fillStyle=isDark?'#8a7a62':'#6a5a42';
+      ctx.fillText('📅 '+n.birth,x+NW/2,y+NH-10);
+    }
+  });
+
+  ctx.font='bold 15px Tajawal,Arial'; ctx.textAlign='center';
+  ctx.fillStyle=isDark?'rgba(201,150,42,0.45)':'rgba(139,90,15,0.35)';
+  ctx.fillText('شجرة العائلة',maxX/2,maxY-16);
+
+  return {canvas:c,width:maxX,height:maxY};
+}
+
+function buildTreeSVG(exportNodes){
+  const NW=180,NH=90,HGAP=55,VGAP=100;
+  const nodeMap={};
+  exportNodes.forEach(n=>{ nodeMap[n.id]={...n}; });
+  function spanOf(id){ const k=exportNodes.filter(n=>n.parentId===id&&nodeMap[n.id]); if(!k.length)return 1; return k.reduce((s,c)=>s+spanOf(c.id),0); }
+  function placeNode(id,d,cs){
+    const k=exportNodes.filter(n=>n.parentId===id&&nodeMap[n.id]);
+    if(!k.length){ nodeMap[id].ex=cs*(NW+HGAP)+60; nodeMap[id].ey=d*(NH+VGAP)+60; return; }
+    let cur=cs; k.forEach(c=>{ placeNode(c.id,d+1,cur); cur+=spanOf(c.id); });
+    nodeMap[id].ex=(nodeMap[k[0].id].ex+nodeMap[k[k.length-1].id].ex)/2; nodeMap[id].ey=d*(NH+VGAP)+60;
+  }
+  const roots=exportNodes.filter(n=>!n.parentId||!nodeMap[n.parentId]);
+  let col=0; roots.forEach(r=>{ placeNode(r.id,0,col); col+=spanOf(r.id); });
+  let mX=0,mY=0;
+  exportNodes.forEach(n=>{ mX=Math.max(mX,(nodeMap[n.id].ex||0)+NW+60); mY=Math.max(mY,(nodeMap[n.id].ey||0)+NH+60); });
+  mX=Math.max(mX,400); mY=Math.max(mY,300);
+
+  let svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${mX}" height="${mY}" viewBox="0 0 ${mX} ${mY}">
+<defs><style>text{font-family:Tajawal,Arial,sans-serif;}</style>
+<radialGradient id="bg" cx="50%" cy="0%" r="80%"><stop offset="0%" stop-color="#1a1510"/><stop offset="100%" stop-color="#0f0e0c"/></radialGradient></defs>
+<rect width="${mX}" height="${mY}" fill="url(#bg)"/>`;
+
+  exportNodes.forEach(n=>{
+    if(!n.parentId||!nodeMap[n.parentId]) return;
+    const p=nodeMap[n.parentId],c=nodeMap[n.id];
+    const px=p.ex+NW/2,py=p.ey+NH,cx2=c.ex+NW/2,cy2=c.ey,m=(py+cy2)/2;
+    svg+=`<path d="M${px},${py} C${px},${m} ${cx2},${m} ${cx2},${cy2}" stroke="#c9962a" stroke-width="1.8" fill="none" opacity="0.55"/>`;
+    svg+=`<polygon points="${cx2},${cy2} ${cx2-5},${cy2-9} ${cx2+5},${cy2-9}" fill="rgba(201,150,42,0.55)"/>`;
+  });
+
+  exportNodes.forEach(n=>{
+    const nm=nodeMap[n.id]; const x=nm.ex,y=nm.ey;
+    const isRoot=!n.parentId||!nodeMap[n.parentId];
+    const gid='g'+n.id;
+    svg+=`<defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${isRoot?'#2a1f00':'#1c1a15'}"/><stop offset="100%" stop-color="${isRoot?'#1a1200':'#141210'}"/></linearGradient></defs>`;
+    svg+=`<rect x="${x}" y="${y}" width="${NW}" height="${NH}" rx="10" fill="url(#${gid})" stroke="${isRoot?'#c9962a':'#2e2820'}" stroke-width="${isRoot?2:1.2}"/>`;
+    svg+=`<text x="${x+NW/2}" y="${y+22}" font-size="16" text-anchor="middle" dominant-baseline="middle">${n.gender==='f'?'👩':'👨'}</text>`;
+    svg+=`<text x="${x+NW/2}" y="${y+46}" font-size="${isRoot?14:12}" font-weight="bold" fill="${isRoot?'#e8c84a':'#e8dcc8'}" text-anchor="middle" direction="rtl">${n.name}</text>`;
+    if(n.birth){ svg+=`<text x="${x+NW/2}" y="${y+NH-10}" font-size="9" fill="#8a7a62" text-anchor="middle">📅 ${n.birth}</text>`; }
+  });
+
+  svg+=`<text x="${mX/2}" y="${mY-12}" font-size="14" fill="rgba(201,150,42,0.45)" text-anchor="middle">شجرة العائلة</text></svg>`;
+  return svg;
+}
+
+async function runExportPreview(){
+  if(!Object.keys(nodes).length){ toast('⚠️ لا توجد بيانات'); return; }
+  if(_exportFmt==='json'||_exportFmt==='svg'){
+    document.getElementById('exportPreviewWrap').innerHTML='<span style="color:var(--gold);font-size:13px">📄 المعاينة غير متاحة لهذه الصيغة</span>';
+    return;
+  }
+  const exportNodes=getExportNodes();
+  const bg=document.getElementById('exportBg').value;
+  const {canvas}=buildTreeCanvas(exportNodes,1,bg);
+  const pw=document.getElementById('exportPreviewWrap');
+  pw.innerHTML=''; canvas.style.maxWidth='100%'; canvas.style.borderRadius='8px'; pw.appendChild(canvas);
+}
+
+async function runExport(){
+  if(!Object.keys(nodes).length){ toast('⚠️ لا توجد بيانات'); return; }
+  // حماية: منع تصدير JSON لغير المدير الكامل حتى لو تم التلاعب بالواجهة
+  if(_exportFmt==='json' && !isAdmin){
+    toast('🚫 النسخة الاحتياطية JSON متاحة للمدير فقط');
+    return;
+  }
+  const ov=document.getElementById('exportOverlay');
+  document.getElementById('exportOverlayMsg').textContent='⏳ جاري البناء...';
+  ov.classList.add('show'); closeModal('exportModal');
+  await new Promise(r=>setTimeout(r,50));
+  try{
+    const exportNodes=getExportNodes();
+    const scale=parseInt(document.getElementById('exportScale').value)||2;
+    const bg=document.getElementById('exportBg').value;
+    const fmt=_exportFmt;
+    const lbl=_exportScope==='partial'&&_lastFocusedId&&nodes[_lastFocusedId]
+      ? nodes[_lastFocusedId].name.replace(/\s+/g,'-') : 'family-tree';
+    const fname=`${lbl}-${new Date().toISOString().slice(0,10)}`;
+
+    if(fmt==='json'){
+      dl(new Blob([JSON.stringify({nodes,nextId,exportedAt:new Date().toISOString()},null,2)],{type:'application/json'}),fname+'.json');
+      toast('✅ تم حفظ النسخة الاحتياطية');
+    } else if(fmt==='svg'){
+      dl(new Blob([buildTreeSVG(exportNodes)],{type:'image/svg+xml'}),fname+'.svg');
+      toast('✅ تم تصدير SVG');
+    } else {
+      const {canvas}=buildTreeCanvas(exportNodes,scale,bg);
+      const mime=fmt==='jpg'?'image/jpeg':'image/png';
+      canvas.toBlob(blob=>{ dl(blob,fname+'.'+fmt); toast('✅ تم تصدير الصورة'); },mime,fmt==='jpg'?0.92:1);
+    }
+  }catch(e){ toast('❌ فشل التصدير: '+e.message); console.error(e); }
+  ov.classList.remove('show');
+}
+
+function dl(blob,name){
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download=name;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+
+function openExportPartial(){ openExportModal(); }
+
+// ══════════════════════════════════════════════════
+//  LONG-PRESS TOOLTIP
+// ══════════════════════════════════════════════════
+let _lpTimer=null;
+
+function attachLongPress(el, id){
+  // ماوس فقط — الـ touch يُعالَج في نظام الـ pan الموحّد
+  el.addEventListener('mousedown', e=>{
+    if(e.target.closest('.node-btn')) return;
+    _lpTimer=setTimeout(()=>showLpTooltip(id, e), 450);
+  });
+  el.addEventListener('mouseup',   hideLpTooltip);
+  el.addEventListener('mouseleave',hideLpTooltip);
+  el.addEventListener('contextmenu',e=>e.preventDefault());
+}
+
+function showLpTooltip(id, pointerEvent){
+  const n=nodes[id]; if(!n) return;
+
+  // بناء سلسلة الأجداد
+  const chain=[];
+  let cur=n.parentId;
+  while(cur&&nodes[cur]){ chain.unshift(nodes[cur].name); cur=nodes[cur].parentId; }
+
+  const tp=document.getElementById('lpTooltip');
+
+  // سلسلة الأجداد: جد → جد → أب
+  const chainHtml=chain.length
+    ? `<div class="lp-chain">${[...chain].reverse().map((nm,i)=>`<span>${nm}</span>${i<chain.length-1?'<span class="lp-arrow">←</span>':''}`).join('')}</div>`
+    : '';
+
+  // ملاحظة / ميلاد
+  const meta=[(n.birth?'📅 '+n.birth:''),(n.note||'')].filter(Boolean).join(' · ');
+
+  tp.innerHTML=`
+    <div class="lp-name">${n.gender==='f'?'👩':'👨'} ${n.name}</div>
+    ${chainHtml}
+    ${meta?`<div class="lp-meta">${meta}</div>`:''}`;
+
+  // الموضع: فوق الإصبع أو المؤشر، مع تصحيح حدود الشاشة
+  const cx=(pointerEvent.clientX||pointerEvent.pageX)||0;
+  const cy=(pointerEvent.clientY||pointerEvent.pageY)||0;
+
+  tp.classList.add('show');
+
+  // نحسب الموضع بعد الإظهار لمعرفة الحجم
+  requestAnimationFrame(()=>{
+    const w=tp.offsetWidth, h=tp.offsetHeight;
+    const vw=window.innerWidth, vh=window.innerHeight;
+    let left=cx - w/2;
+    let top =cy - h - 16;
+    // تصحيح الحدود
+    if(left<8) left=8;
+    if(left+w>vw-8) left=vw-w-8;
+    if(top<8) top=cy+24; // تحته لو ما في مساحة فوقه
+    tp.style.left=left+'px';
+    tp.style.top =top+'px';
+  });
+}
+
+function hideLpTooltip(){
+  clearTimeout(_lpTimer); _lpTimer=null;
+  document.getElementById('lpTooltip').classList.remove('show');
+}
+
+// ══════════════════════════════════════════════════
+//  ZOOM + PAN + LONG-PRESS — موحّد بدون تعارض
+// ══════════════════════════════════════════════════
+(function(){
+  const W=()=>document.getElementById('canvas-wrap');
+  const TI=()=>document.getElementById('tree-inner');
+
+  /* ── State ── */
+  let _s=1, _tx=0, _ty=0;          // scale + translate
+  const MIN=0.1, MAX=4;
+
+  function apply(){
+    const el=TI(); if(!el) return;
+    el.style.transform=`translate(${_tx}px,${_ty}px) scale(${_s})`;
+  }
+
+  function zoomAt(cx,cy,factor){
+    const ns=Math.max(MIN,Math.min(MAX,_s*factor));
+    if(ns===_s) return;
+    _tx=cx-(cx-_tx)*(ns/_s);
+    _ty=cy-(cy-_ty)*(ns/_s);
+    _s=ns; apply();
+  }
+
+  /* ── Center Tree ── */
+  window._userHasPanned = false;
+  window._centerTree = function(){
+    const wrap = W(); if(!wrap) return;
+    const ids = Object.keys(nodes);
+    if(!ids.length) return;
+
+    // إيجاد الجذر (أعلى عقدة في الشجرة)
+    const rootId = Object.keys(nodes).find(id => !nodes[id].parentId) || Object.keys(nodes)[0];
+    const root = nodes[rootId];
+    if(!root) return;
+
+    const ww = window.innerWidth;
+    const wh = window.innerHeight - 150;
+
+    // scale ثابت مناسب للقراءة
+    _s = 0.45;
+
+    // ضع الجذر في منتصف الشاشة أفقياً وعمودياً
+    _tx = ww/2 - (root.x + NODE_W/2) * _s;
+    _ty = wh/2 - (root.y + NODE_H/2) * _s;
+
+    apply();
   };
 
-  ctx.strokeStyle='#c9962a'; ctx.lineWidth=2; ctx.globalAlpha=0.7;
-
-  // رسم الأسلاف من الأعلى للأسفل (عمودياً)
-  for(let i=0; i<ancestry.length; i++){
-    const ancestorId=ancestry[i];
-    const ancestorNode=nodes[ancestorId];
-    const isTarget=(ancestorId===id);
-    const x=(w-NW)/2; // توسيط عمودياً
-    const y=pad+i*(NH+vGap);
-
-    drawNode(ancestorNode.name, x, y, isTarget);
-
-    // خط إلى الشخص التالي
-    if(i<ancestry.length-1){
-      ctx.beginPath();
-      ctx.moveTo(x+NW/2, y+NH);
-      ctx.lineTo(x+NW/2, y+NH+vGap);
-      ctx.stroke();
+  /* ── panTo للبحث ── */
+  window._panTo=function(nodeCX,nodeCY,ww,wh){
+    const targetTx=ww/2-nodeCX*_s;
+    const targetTy=wh/2-nodeCY*_s;
+    const sx=_tx,sy=_ty; const dur=450,t0=performance.now();
+    function step(now){
+      const p=Math.min(1,(now-t0)/dur);
+      const e=1-Math.pow(1-p,3);
+      _tx=sx+(targetTx-sx)*e; _ty=sy+(targetTy-sy)*e; apply();
+      if(p<1) requestAnimationFrame(step);
     }
-  }
+    requestAnimationFrame(step);
+  };
+  window._applyTransform=apply;
+  window._scale=new Proxy({},{get:()=>_s});
 
-  // رسم الأبناء في الأسفل
-  if(children.length>0){
-    const lastAncestorY=pad+(ancestry.length-1)*(NH+vGap);
-    const childrenY=lastAncestorY+NH+vGap;
-    const childrenWidth=children.length*NW + (children.length+1)*hGap;
-    let childX=(w-childrenWidth)/2+hGap;
-
-    children.forEach((child, idx)=>{
-      const x=childX+idx*(NW+hGap);
-      const y=childrenY;
-      drawNode(child.name, x, y, false);
-
-      // خط من الشخص للابن
-      ctx.beginPath();
-      ctx.moveTo((w-NW)/2+NW/2, lastAncestorY+NH);
-      ctx.lineTo(x+NW/2, y);
-      ctx.stroke();
-    });
-  }
-  ctx.globalAlpha=1;
-
-  try{
-    const dataUrl=canvas.toDataURL('image/png');
-    const link=document.createElement('a');
-    link.download=n.name.replace(/\s+/g,'-')+'.png';
-    link.href=dataUrl;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    toast('✅ تم تصدير شجرة '+n.name);
-  }catch(e){
-    toast('❌ فشل التصدير: '+e.message);
-    console.error(e);
-  }
-
-  ov.classList.remove('show');
-  ov.querySelector('p').textContent='⏳ جاري تصدير الصورة...';
-}
-
-// ══════════════════════════════════════════════════
-//  ZOOM SYSTEM (Pinch Zoom + Wheel Zoom)
-// ══════════════════════════════════════════════════
-let currentZoom = 1;
-const MIN_ZOOM = 0.5; // تصغير حتى 50%
-const MAX_ZOOM = 3;   // تكبير حتى 300%
-const ZOOM_STEP = 0.1;
-
-function setZoom(newZoom) {
-  const tree = document.getElementById('tree-canvas');
-  if(!tree) return;
-  
-  currentZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, newZoom));
-  
-  // استخدام zoom property بدل transform (يعمل بشكل أفضل على الهاتف)
-  tree.style.zoom = currentZoom;
-}
-
-// عجلة الماوس (أو trackpad)
-document.addEventListener('wheel', (e) => {
-  const wrap = document.getElementById('canvas-wrap');
-  if(!wrap || !wrap.contains(e.target)) return;
-  
-  if(e.ctrlKey || e.metaKey) {
+  /* ══ WHEEL ══ */
+  document.addEventListener('wheel',e=>{
+    const w=W(); if(!w||!w.contains(e.target)) return;
     e.preventDefault();
-    const direction = e.deltaY > 0 ? -1 : 1;
-    setZoom(currentZoom + direction * ZOOM_STEP);
-  }
-}, { passive: false });
+    window._userHasPanned = true;
+    const r=w.getBoundingClientRect();
+    zoomAt(e.clientX-r.left,e.clientY-r.top,e.deltaY<0?1.12:0.90);
+  },{passive:false});
 
-// Pinch Zoom للهاتف
-let lastDistance = 0;
-let zoomStarted = false;
+  /* ══ MOUSE PAN ══ */
+  let mp=false,mpx=0,mpy=0;
+  document.addEventListener('mousedown',e=>{
+    const w=W(); if(!w||!w.contains(e.target)) return;
+    if(e.button!==0) return;
+    if(e.target.closest('button,.node-btn')) return;
+    mp=true; mpx=e.clientX-_tx; mpy=e.clientY-_ty;
+    window._userHasPanned = true;
+    w.classList.add('panning');
+  });
+  document.addEventListener('mousemove',e=>{
+    if(!mp) return;
+    _tx=e.clientX-mpx; _ty=e.clientY-mpy; apply();
+  });
+  document.addEventListener('mouseup',()=>{ mp=false; W()?.classList.remove('panning'); });
 
-document.addEventListener('touchstart', (e) => {
-  if(e.touches.length === 2) {
-    zoomStarted = true;
-    const dx = e.touches[0].clientX - e.touches[1].clientX;
-    const dy = e.touches[0].clientY - e.touches[1].clientY;
-    lastDistance = Math.sqrt(dx*dx + dy*dy);
-  }
-}, { passive: true });
+  /* ══ TOUCH: PAN + PINCH + LONG-PRESS (موحّد) ══ */
+  let _lt=[];          // last touches
+  let _lpTimer=null;   // long-press timer
+  let _moved=false;    // هل تحرك الإصبع؟
 
-document.addEventListener('touchmove', (e) => {
-  if(e.touches.length === 2 && zoomStarted) {
-    const wrap = document.getElementById('canvas-wrap');
-    if(!wrap || !wrap.contains(e.target)) return;
-    
-    e.preventDefault();
-    const dx = e.touches[0].clientX - e.touches[1].clientX;
-    const dy = e.touches[0].clientY - e.touches[1].clientY;
-    const distance = Math.sqrt(dx*dx + dy*dy);
-    
-    if(lastDistance > 0) {
-      const ratio = distance / lastDistance;
-      const change = (ratio - 1) * 0.5;
-      setZoom(currentZoom + change);
+  function dst(a,b){const dx=a.clientX-b.clientX,dy=a.clientY-b.clientY;return Math.sqrt(dx*dx+dy*dy);}
+  function mid(a,b){return{x:(a.clientX+b.clientX)/2,y:(a.clientY+b.clientY)/2};}
+  function tc(e){return Array.from(e.touches);}
+
+  document.addEventListener('touchstart',e=>{
+    const w=W(); if(!w||!w.contains(e.target)) return;
+    const cur=tc(e);
+    _lt=cur; _moved=false;
+
+    // long-press: فقط إصبع واحد على عقدة
+    if(cur.length===1){
+      const nodeEl=e.target.closest('.node');
+      if(nodeEl && !e.target.closest('button,.node-btn')){
+        const id=nodeEl.id.replace('node-','');
+        clearTimeout(_lpTimer);
+        _lpTimer=setTimeout(()=>{
+          if(!_moved) showLpTooltip(id, cur[0]);
+        },450);
+      }
+    } else {
+      // إصبعان: ألغِ الـ long-press
+      clearTimeout(_lpTimer); _lpTimer=null;
     }
-    lastDistance = distance;
-  }
-}, { passive: false });
+  },{passive:true});
 
-document.addEventListener('touchend', () => {
-  zoomStarted = false;
-  lastDistance = 0;
-}, { passive: true });
+  document.addEventListener('touchmove',e=>{
+    const w=W(); if(!w||!w.contains(e.target)) return;
+    const cur=tc(e);
+    if(!_lt.length){_lt=cur;return;}
+
+    // أي حركة تلغي الـ long-press
+    const moved=dst(cur[0],_lt[0])>5;
+    if(moved){ _moved=true; clearTimeout(_lpTimer); _lpTimer=null; window._userHasPanned=true; }
+
+    if(!_moved && cur.length===1) { _lt=cur; return; } // لا تحريك بعد
+
+    e.preventDefault();
+    const r=w.getBoundingClientRect();
+
+    if(cur.length===1){
+      _tx+=cur[0].clientX-_lt[0].clientX;
+      _ty+=cur[0].clientY-_lt[0].clientY;
+      apply();
+    } else if(cur.length===2 && _lt.length===2){
+      const mC=mid(cur[0],cur[1]), mL=mid(_lt[0],_lt[1]);
+      _tx+=mC.x-mL.x; _ty+=mC.y-mL.y;
+      const dC=dst(cur[0],cur[1]), dL=dst(_lt[0],_lt[1]);
+      if(dL>5){
+        const cx=mC.x-r.left, cy=mC.y-r.top;
+        const ns=Math.max(MIN,Math.min(MAX,_s*(dC/dL)));
+        _tx=cx-(cx-_tx)*(ns/_s);
+        _ty=cy-(cy-_ty)*(ns/_s);
+        _s=ns;
+      }
+      apply();
+    }
+    _lt=cur;
+  },{passive:false});
+
+  document.addEventListener('touchend',e=>{
+    clearTimeout(_lpTimer); _lpTimer=null;
+    hideLpTooltip();
+    _lt=tc(e);
+  },{passive:true});
+
+})();
 </script>
 </body>
 </html>
